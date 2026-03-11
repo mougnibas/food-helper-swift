@@ -211,14 +211,33 @@ tests_end_to_end() {
 # Initialize log file.
 init_logs
 
+# Resolve optional target parameter (unit, integration, end-to-end).
+# Default : no parameter (all).
+TARGET="all"
+if [ "$#" -gt 0 ]; then
+    case "$1" in
+        --mode=unit|--mode=integration|--mode=end-to-end)
+            TARGET="${1#--mode=}"
+            ;;
+        *)
+            echo "Usage: $0 [--mode=unit|--mode=integration|--mode=end-to-end]" >&2
+            exit 1
+            ;;
+    esac
+fi
+
 # List Xcode schemes.
 list_schemes
 
-# Xcode unit tests.
-tests_unit
+# Xcode tests by target.
+if [ "$TARGET" = "all" ] || [ "$TARGET" = "unit" ]; then
+    tests_unit
+fi
 
-# Xcode integration tests.
-tests_integration
+if [ "$TARGET" = "all" ] || [ "$TARGET" = "integration" ]; then
+    tests_integration
+fi
 
-# Xcode end-to-end tests.
-tests_end_to_end
+if [ "$TARGET" = "all" ] || [ "$TARGET" = "end-to-end" ]; then
+    tests_end_to_end
+fi

@@ -232,6 +232,32 @@ For end-to-end tests, also stop docker-compose app :
 docker compose down --volumes
 ```
 
+#### Test with `script-ci-xcode.sh`
+
+##### Test with `script-ci-xcode.sh` (run all targets)
+
+```zsh
+./script-ci-xcode.sh
+```
+
+##### Test with `script-ci-xcode.sh` (run only unit tests)
+
+```zsh
+./script-ci-xcode.sh --mode=unit
+```
+
+##### Test with `script-ci-xcode.sh` (run only integration tests)
+
+```zsh
+./script-ci-xcode.sh --mode=integration
+```
+
+##### Test with `script-ci-xcode.sh` (run only end-to-end tests)
+
+```zsh
+./script-ci-xcode.sh --mode=end-to-end
+```
+
 ### Package (docker image)
 
 ```zsh
