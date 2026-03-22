@@ -1,0 +1,48 @@
+## GNU AFFERO GENERAL PUBLIC LICENSE
+## Version 3, 19 November 2007
+##
+## Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+## Everyone is permitted to copy and distribute verbatim copies
+## of this license document, but changing it is not allowed.
+
+services:
+
+  kernel :
+    image: food-helper-kernel
+    build:
+      context:    FoodHelperKernel/
+    environment:
+      DB_HOSTNAME: ${DB_HOSTNAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health/live"]
+      start_period: 5s
+      interval: 10s
+      timeout: 2s
+      retries: 5
+    depends_on :
+      database:
+        condition: service_healthy
+
+  database:
+    image: mariadb:12.1-noble
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_USER:          ${DB_USERNAME}
+      MARIADB_PASSWORD:      ${DB_PASSWORD}
+      MARIADB_DATABASE:      ${DB_DATABASE}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 5s
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+volumes:
+  mariadb_data:
