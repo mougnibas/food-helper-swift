@@ -304,6 +304,20 @@ struct FoodHelperKernelTestImplUnit {
     }
     // swiftlint:enable function_body_length
 
+    @Test("getRecipeById two time should throw cantAccessData")
+    func getRecipeByIdTwoTimeShouldThrowCantAccessData() async throws {
+
+        // Arrange.
+        let service = try await FoodHelperKernelImpl(dataAccess: FailingDataAccess())
+        let id = UUID(uuidString: "B68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!
+        _ = try await service.getRecipeById(id: id)
+
+        // Act and assert.
+        await #expect(throws: FoodHelperKernelError.cantAccessData) {
+            _ = try await service.getRecipeById(id: id)
+        }
+    }
+
     @Test("Get recipe with unknown ID should return nil")
     func getRecipeWithUnknownIdShouldReturnNil() async throws {
 
@@ -370,12 +384,9 @@ struct FoodHelperKernelTestImplUnit {
         // Arrange.
         let service = try await FoodHelperKernelImpl(dataAccess: FailingDataAccess())
 
-        // Act.
-        do {
-            _ = try await service.getAllRecipes()
-        } catch let error {
-            // Assert.
-            #expect(error == .cantAccessData)
+        // Act and assert.
+        await #expect(throws: FoodHelperKernelError.cantAccessData) {
+            try await service.getAllRecipes()
         }
     }
 
@@ -385,13 +396,11 @@ struct FoodHelperKernelTestImplUnit {
         // Arrange.
         let service = try await FoodHelperKernelImpl(dataAccess: FailingDataAccess())
         let id = UUID(uuidString: "A68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!
+        _ = try await service.getRecipeById(id: id)
 
-        // Act.
-        do {
+        // Act and assert.
+        await #expect(throws: FoodHelperKernelError.cantAccessData) {
             _ = try await service.getRecipeById(id: id)
-        } catch let error {
-            // Assert.
-            #expect(error == .cantAccessData)
         }
     }
 
@@ -401,13 +410,11 @@ struct FoodHelperKernelTestImplUnit {
         // Arrange.
         let service = try await FoodHelperKernelImpl(dataAccess: FailingDataAccess())
         let recipe = Recipe(id: UUID(uuidString: "A68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!, name: "Raclette")
+        try await service.addRecipe(recipe: recipe)
 
-        // Act.
-        do {
+        // Act and assert.
+        await #expect(throws: FoodHelperKernelError.cantAccessData) {
             try await service.addRecipe(recipe: recipe)
-        } catch let error {
-            // Assert.
-            #expect(error == .cantAccessData)
         }
     }
 
@@ -418,12 +425,9 @@ struct FoodHelperKernelTestImplUnit {
         let service = try await FoodHelperKernelImpl(dataAccess: FailingDataAccess())
         let id = UUID(uuidString: "B68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!
 
-        // Act.
-        do {
+        // Act and assert.
+        await #expect(throws: FoodHelperKernelError.cantAccessData) {
             try await service.deleteRecipeById(id: id)
-        } catch let error {
-            // Assert.
-            #expect(error == .cantAccessData)
         }
     }
 }

@@ -11,16 +11,26 @@ import Fluent
 
 import FoodHelperKernel
 import FoodHelperKernelDataAccess
+import FoodHelperKernelDataAccessInMemory
 
 public actor FoodHelperKernelDataAccessFluent: FoodHelperKernelDataAccess {
 
     /// Fluent database to use.
     var database: Database
 
-    public init(_ database: Database) async throws {
+    public init(_ database: Database) async throws(FoodHelperKernelDataAccessError) {
 
         // Reference database instance.
         self.database = database
+
+        // Seed recipes from in-memory source when needed.
+        let inMemory = FoodHelperKernelDataAccessInMemory()
+        let identifiers = try await inMemory.getIdentifiers()
+        for id in identifiers {
+            if let recipe = try await inMemory.getByIdentifier(id) {
+                try await createOrUpdate(recipe)
+            }
+        }
     }
 
     public func getIdentifiers() async throws(FoodHelperKernelDataAccessError) -> [UUID] {

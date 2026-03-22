@@ -43,15 +43,15 @@ struct FoodHelperKernelWebserviceFactory {
 
         case .testing:
             try await configureSQLiteInMemoryDatabase(app)
-            data = try await FoodHelperKernelDataAccessFluent(app.db)
             app.migrations.add(Migration000())
             try await app.autoMigrate()
+            data = try await FoodHelperKernelDataAccessFluent(app.db)
 
         case .production, _:
             try await configureMySQLDatabase(app)
-            data = try await FoodHelperKernelDataAccessFluent(app.db)
             app.migrations.add(Migration000())
             try await app.autoMigrate()
+            data = try await FoodHelperKernelDataAccessFluent(app.db)
         }
 
         // Data access and service implementation.

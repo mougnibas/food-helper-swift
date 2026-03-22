@@ -128,6 +128,7 @@ let package = Package(
             name: "FoodHelperKernelDataAccessFluent",
             dependencies: [
                 "FoodHelperKernelDataAccess",
+                "FoodHelperKernelDataAccessInMemory",
                 .product(name: "Vapor", package: "vapor"),
                 .product(name: "Fluent", package: "fluent")
             ],

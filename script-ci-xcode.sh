@@ -46,45 +46,54 @@ list_schemes() {
     fi
 }
 
+# Function: open latest xcresult report.
+open_latest_xcresult() {
+    local derived_data_dir="$HOME/Library/Developer/Xcode/DerivedData"
+    local latest_result
+
+    latest_result="$(ls -td "$derived_data_dir"/*/Logs/Test/*.xcresult 2>/dev/null | head -n 1)"
+    if [ -n "$latest_result" ]; then
+        xed "$latest_result"
+    else
+        echo "No xcresult report found in $derived_data_dir" >&2
+    fi
+}
+
 # Function: Unit Tests.
 tests_unit() {
     echo "Running Unit tests: ..."
 
     echo "Running Unit tests: FoodHelperKernelTestUnit: ..."
-    if rm -Rf reports/FoodHelperKernelTestUnit.xcresult >> "$LOG_FILE" 2>&1 && \
-       xcodebuild -scheme FoodHelperKernelTestUnit test -enableCodeCoverage YES -resultBundlePath reports/FoodHelperKernelTestUnit.xcresult >> "$LOG_FILE" 2>&1; then
+    if xcodebuild -scheme FoodHelperKernelTestUnit test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
         echo "Running Unit tests: FoodHelperKernelTestUnit: SUCCESS"
-        xed reports/FoodHelperKernelTestUnit.xcresult
+        open_latest_xcresult
     else
         echo "Running Unit tests: FoodHelperKernelTestUnit: FAILURE (see $LOG_FILE)" >&2
         exit 1
     fi
 
     echo "Running Unit tests: FoodHelperKernelTestsDataAccessInMemoryUnit: ..."
-    if rm -Rf reports/FoodHelperKernelTestsDataAccessInMemoryUnit.xcresult >> "$LOG_FILE" 2>&1 && \
-       xcodebuild -scheme FoodHelperKernelTestsDataAccessInMemoryUnit test -enableCodeCoverage YES -resultBundlePath reports/FoodHelperKernelTestsDataAccessInMemoryUnit.xcresult >> "$LOG_FILE" 2>&1; then
+    if xcodebuild -scheme FoodHelperKernelTestsDataAccessInMemoryUnit test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
         echo "Running Unit tests: FoodHelperKernelTestsDataAccessInMemoryUnit: SUCCESS"
-        xed reports/FoodHelperKernelTestsDataAccessInMemoryUnit.xcresult
+        open_latest_xcresult
     else
         echo "Running Unit tests: FoodHelperKernelTestsDataAccessInMemoryUnit: FAILURE (see $LOG_FILE)" >&2
         exit 1
     fi
 
     echo "Running Unit tests: FoodHelperKernelTestImplUnit: ..."
-    if rm -Rf reports/FoodHelperKernelTestImplUnit.xcresult >> "$LOG_FILE" 2>&1 && \
-       xcodebuild -scheme FoodHelperKernelTestImplUnit test -enableCodeCoverage YES -resultBundlePath reports/FoodHelperKernelTestImplUnit.xcresult >> "$LOG_FILE" 2>&1; then
+    if xcodebuild -scheme FoodHelperKernelTestImplUnit test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
         echo "Running Unit tests: FoodHelperKernelTestImplUnit: SUCCESS"
-        xed reports/FoodHelperKernelTestImplUnit.xcresult
+        open_latest_xcresult
     else
         echo "Running Unit tests: FoodHelperKernelTestImplUnit: FAILURE (see $LOG_FILE)" >&2
         exit 1
     fi
 
     echo "Running Unit tests: FoodHelperKernelTestsClientUnit: ..."
-    if rm -Rf reports/FoodHelperKernelTestsClientUnit.xcresult >> "$LOG_FILE" 2>&1 && \
-       xcodebuild -scheme FoodHelperKernelTestsClientUnit test -enableCodeCoverage YES -resultBundlePath reports/FoodHelperKernelTestsClientUnit.xcresult >> "$LOG_FILE" 2>&1; then
+    if xcodebuild -scheme FoodHelperKernelTestsClientUnit test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
         echo "Running Unit tests: FoodHelperKernelTestsClientUnit: SUCCESS"
-        xed reports/FoodHelperKernelTestsClientUnit.xcresult
+        open_latest_xcresult
     else
         echo "Running Unit tests: FoodHelperKernelTestsClientUnit: FAILURE (see $LOG_FILE)" >&2
         exit 1
@@ -117,10 +126,9 @@ tests_integration() {
 
     echo "Running Integration tests: ..."
     echo "Running Integration tests: FoodHelperKernelTestsDataAccessFluentIntegration: ..."
-    if rm -Rf reports/FoodHelperKernelTestsDataAccessFluentIntegration.xcresult >> "$LOG_FILE" 2>&1 && \
-       xcodebuild -scheme FoodHelperKernelTestsDataAccessFluentIntegration test -enableCodeCoverage YES -resultBundlePath reports/FoodHelperKernelTestsDataAccessFluentIntegration.xcresult >> "$LOG_FILE" 2>&1; then
+    if xcodebuild -scheme FoodHelperKernelTestsDataAccessFluentIntegration test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
         echo "Running Integration tests: FoodHelperKernelTestsDataAccessFluentIntegration: SUCCESS"
-        xed reports/FoodHelperKernelTestsDataAccessFluentIntegration.xcresult
+        open_latest_xcresult
     else
         echo "Running Integration tests: FoodHelperKernelTestsDataAccessFluentIntegration: FAILURE (see $LOG_FILE)" >&2
         stop_mariadb_on_failure
@@ -128,10 +136,9 @@ tests_integration() {
     fi
 
     echo "Running Integration tests: FoodHelperKernelTestsWebserviceIntegration: ..."
-    if rm -Rf reports/FoodHelperKernelTestsWebserviceIntegration.xcresult >> "$LOG_FILE" 2>&1 && \
-       xcodebuild -scheme FoodHelperKernelTestsWebserviceIntegration test -enableCodeCoverage YES -resultBundlePath reports/FoodHelperKernelTestsWebserviceIntegration.xcresult >> "$LOG_FILE" 2>&1; then
+    if xcodebuild -scheme FoodHelperKernelTestsWebserviceIntegration test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
         echo "Running Integration tests: FoodHelperKernelTestsWebserviceIntegration: SUCCESS"
-        xed reports/FoodHelperKernelTestsWebserviceIntegration.xcresult
+        open_latest_xcresult
     else
         echo "Running Integration tests: FoodHelperKernelTestsWebserviceIntegration: FAILURE (see $LOG_FILE)" >&2
         stop_mariadb_on_failure
@@ -139,10 +146,9 @@ tests_integration() {
     fi
 
     echo "Running Integration tests: FoodHelperKernelTestsClientIntegration: ..."
-    if rm -Rf reports/FoodHelperKernelTestsClientIntegration.xcresult >> "$LOG_FILE" 2>&1 && \
-       xcodebuild -scheme FoodHelperKernelTestsClientIntegration test -enableCodeCoverage YES -resultBundlePath reports/FoodHelperKernelTestsClientIntegration.xcresult >> "$LOG_FILE" 2>&1; then
+    if xcodebuild -scheme FoodHelperKernelTestsClientIntegration test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
         echo "Running Integration tests: FoodHelperKernelTestsClientIntegration: SUCCESS"
-        xed reports/FoodHelperKernelTestsClientIntegration.xcresult
+        open_latest_xcresult
     else
         echo "Running Integration tests: FoodHelperKernelTestsClientIntegration: FAILURE (see $LOG_FILE)" >&2
         stop_mariadb_on_failure
@@ -175,10 +181,9 @@ tests_end_to_end() {
 
     echo "Running End-to-end tests: ..."
     echo "Running End-to-end tests: FoodHelperKernelTestsWebserviceEndToEnd: ..."
-    if rm -Rf reports/FoodHelperKernelTestsWebserviceEndToEnd.xcresult >> "$LOG_FILE" 2>&1 && \
-       xcodebuild -scheme FoodHelperKernelTestsWebserviceEndToEnd test -enableCodeCoverage YES -resultBundlePath reports/FoodHelperKernelTestsWebserviceEndToEnd.xcresult >> "$LOG_FILE" 2>&1; then
+    if xcodebuild -scheme FoodHelperKernelTestsWebserviceEndToEnd test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
         echo "Running End-to-end tests: FoodHelperKernelTestsWebserviceEndToEnd: SUCCESS"
-        xed reports/FoodHelperKernelTestsWebserviceEndToEnd.xcresult
+        open_latest_xcresult
     else
         echo "Running End-to-end tests: FoodHelperKernelTestsWebserviceEndToEnd: FAILURE (see $LOG_FILE)" >&2
         stop_compose_on_failure
@@ -186,10 +191,9 @@ tests_end_to_end() {
     fi
 
     echo "Running End-to-end tests: FoodHelperKernelTestsClientEndToEnd: ..."
-    if rm -Rf reports/FoodHelperKernelTestsClientEndToEnd.xcresult >> "$LOG_FILE" 2>&1 && \
-       xcodebuild -scheme FoodHelperKernelTestsClientEndToEnd test -enableCodeCoverage YES -resultBundlePath reports/FoodHelperKernelTestsClientEndToEnd.xcresult >> "$LOG_FILE" 2>&1; then
+    if xcodebuild -scheme FoodHelperKernelTestsClientEndToEnd test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
         echo "Running End-to-end tests: FoodHelperKernelTestsClientEndToEnd: SUCCESS"
-        xed reports/FoodHelperKernelTestsClientEndToEnd.xcresult
+        open_latest_xcresult
     else
         echo "Running End-to-end tests: FoodHelperKernelTestsClientEndToEnd: FAILURE (see $LOG_FILE)" >&2
         stop_compose_on_failure

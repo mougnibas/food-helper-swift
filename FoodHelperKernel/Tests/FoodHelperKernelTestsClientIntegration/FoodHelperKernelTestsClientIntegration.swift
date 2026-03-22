@@ -160,6 +160,35 @@ final class FoodHelperKernelTestsClientIntegration {
         }
     }
 
+    @Test("PartiallyFailingDataAccess should return nil on getByIdentifier with unknow identifier")
+    func partiallyFailingDataAccessShouldReturnNilOnGetByIdentifierWithUnknownIdentifier() async throws {
+
+        // Arrange.
+        let service = PartiallyFailingDataAccess()
+        let unknownUuid = UUID.init(uuidString: "00000000-0000-0000-0000-000000000404")!
+        let expected: Recipe? = nil
+
+        // Act.
+        let actual = try await service.getByIdentifier(unknownUuid)
+
+        // Assert.
+        #expect(expected == actual)
+    }
+
+    @Test("PartiallyFailingDataAccess should not explode on createOrUpdate")
+    func partiallyFailingDataAccessShouldNotExplodeOnCreateOrUpdate() async throws {
+
+        // Arrange.
+        let service = PartiallyFailingDataAccess()
+        let newRecipe = Recipe(name: "new recipe")
+
+        // Act.
+        _ = try await service.createOrUpdate(newRecipe)
+
+        // Assert.
+        #expect(true)
+    }
+
     @Test("customWithApp should cleanup and rethrow on error")
     func customWithAppShouldCleanupAndRethrowOnError() async throws {
 
