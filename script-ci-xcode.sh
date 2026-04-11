@@ -99,6 +99,15 @@ tests_unit() {
         exit 1
     fi
 
+    echo "Running Unit tests: FoodHelperRecipeTestImplUnit: ..."
+    if xcodebuild -scheme FoodHelperRecipeTestImplUnit test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
+        echo "Running Unit tests: FoodHelperRecipeTestImplUnit: SUCCESS"
+        open_latest_xcresult
+    else
+        echo "Running Unit tests: FoodHelperRecipeTestImplUnit: FAILURE (see $LOG_FILE)" >&2
+        exit 1
+    fi
+
     echo "Running Unit tests: SUCCESS"
     echo
 }
