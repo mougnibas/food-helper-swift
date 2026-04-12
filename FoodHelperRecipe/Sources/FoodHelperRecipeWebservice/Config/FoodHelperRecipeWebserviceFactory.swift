@@ -50,8 +50,13 @@ struct FoodHelperRecipeWebserviceFactory {
 
         // Configure server hostname and port.
         // Priorities : environment value > default values
+        var port = 8081
+        if Environment.get("APP_PORT") != nil {
+            let portString = Environment.get("APP_PORT")!
+            port = Int(portString)!
+        }
+        app.http.server.configuration.port = port
         app.http.server.configuration.hostname = Environment.get("APP_HOSTNAME") ?? "0.0.0.0"
-        app.http.server.configuration.port = Environment.get("APP_PORT").flatMap(Int.init) ?? 8081 // TODO Code coverage
 
         // Create, then register the controller (collection of routes).
         let controller = FoodHelperRecipeWebserviceController(service)
