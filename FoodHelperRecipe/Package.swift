@@ -78,6 +78,7 @@ let package = Package(
                 "FoodHelperRecipeImpl",
                 .product(name: "FoodHelperKernelDataAccessInMemory", package: "FoodHelperKernel"),
                 .product(name: "FoodHelperKernelImpl",               package: "FoodHelperKernel"),
+                .product(name: "FoodHelperKernelClient",             package: "FoodHelperKernel"),
                 .product(name: "Vapor", package: "vapor")
             ],
             plugins: [

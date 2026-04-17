@@ -11,6 +11,7 @@ import FoodHelperKernel
 import FoodHelperKernelImpl
 import FoodHelperKernelDataAccess
 import FoodHelperKernelDataAccessInMemory
+import FoodHelperKernelClient
 import FoodHelperRecipe
 import FoodHelperRecipeImpl
 
@@ -18,20 +19,8 @@ struct FoodHelperRecipeWebserviceFactory {
 
     static func configure(_ app: Application) async throws {
 
-        // Get an instance to a kernel, according to environment target.
-        var kernel: FoodHelperKernel
-        switch app.environment {
-        case .development:
-            kernel = try await FoodHelperKernelImpl(dataAccess: FoodHelperKernelDataAccessInMemory())
-        case .testing:
-            // TODO Create testing specific kernel.
-            kernel = try await FoodHelperKernelImpl(dataAccess: FoodHelperKernelDataAccessInMemory())
-        case .production, _:
-            // TODO Create production specific kernel.
-            kernel = try await FoodHelperKernelImpl(dataAccess: FoodHelperKernelDataAccessInMemory())
-        }
-
-        // Service implementation with kernel.
+        // Service implementation with kernel client.
+        let kernel = FoodHelperKernelClient()
         let service = FoodHelperRecipeImpl(kernel)
 
         // Generic configuration.

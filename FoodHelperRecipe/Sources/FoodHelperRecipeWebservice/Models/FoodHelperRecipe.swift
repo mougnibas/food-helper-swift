@@ -9,4 +9,4 @@ import Foundation
 import Vapor
 import FoodHelperKernel
 
-extension Recipe: Content {}
+extension Recipe: @retroactive Content {}

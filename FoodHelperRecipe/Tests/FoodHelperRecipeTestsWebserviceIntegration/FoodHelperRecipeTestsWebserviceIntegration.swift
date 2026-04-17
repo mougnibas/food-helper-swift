@@ -19,7 +19,7 @@ import FoodHelperRecipeImpl
 
 @testable import FoodHelperRecipeWebservice
 
-@Suite("Webservice route Integration Tests", .serialized)
+@Suite("Webservice route Integration Tests")
 
 actor FoodHelperRecipeFaultyImpl: FoodHelperRecipe {
 
@@ -46,8 +46,10 @@ actor FoodHelperRecipeFaultyImpl: FoodHelperRecipe {
 struct FoodHelperRecipeTestsWebserviceIntegration {
 // swiftlint:enable type_name
 
-    private func customWithApp(environment: Environment, _ test: (Application) async throws -> Void) async throws {
-        let app = try await Application.make(environment)
+    private func customWithAppWithDefault(_ test: (Application) async throws -> Void) async throws {
+
+        // Vapor wiring.
+        let app = try await Application.make(.testing)
         do {
             try await FoodHelperRecipeWebserviceFactory.configure(app)
             try await test(app)
@@ -58,19 +60,37 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         try await app.asyncShutdown()
     }
 
-    private func customWithAppWithFaultyService(
-        environment: Environment, _ test: (Application) async throws -> Void) async throws {
+    private func customWithApp(_ test: (Application) async throws -> Void) async throws {
 
-            let app = try await Application.make(environment)
-            do {
-                let service = FoodHelperRecipeFaultyImpl()
-                try await FoodHelperRecipeWebserviceFactory.configure(app, service)
-                try await test(app)
-            } catch {
-                try await app.asyncShutdown()
-                throw error
-            }
+        // Business objects.
+        let dataAccess = FoodHelperKernelDataAccessInMemory()
+        let kernel = try await FoodHelperKernelImpl(dataAccess: dataAccess)
+        let service = FoodHelperRecipeImpl(kernel)
+
+        // Vapor wiring.
+        let app = try await Application.make(.testing)
+        do {
+            try await FoodHelperRecipeWebserviceFactory.configure(app, service)
+            try await test(app)
+        } catch {
             try await app.asyncShutdown()
+            throw error
+        }
+        try await app.asyncShutdown()
+    }
+
+    private func customWithAppWithFaultyService(_ test: (Application) async throws -> Void) async throws {
+
+        let app = try await Application.make(.testing)
+        do {
+            let service = FoodHelperRecipeFaultyImpl()
+            try await FoodHelperRecipeWebserviceFactory.configure(app, service)
+            try await test(app)
+        } catch {
+            try await app.asyncShutdown()
+            throw error
+        }
+        try await app.asyncShutdown()
     }
 
     @Test("customWithApp should cleanup and rethrow on error")
@@ -79,7 +99,25 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         do {
 
             // Arrange.
-            try await customWithApp(environment: .testing) { _ in
+            try await customWithApp { _ in
+
+                // Act.
+                throw CancellationError()
+            }
+        } catch {
+
+            // Assert.
+            #expect(true)
+        }
+    }
+
+    @Test("customWithAppWithDefault should cleanup and rethrow on error")
+    func customWithAppWithDefaultShouldCleanupAndRethrowOnError() async throws {
+
+        do {
+
+            // Arrange.
+            try await customWithAppWithDefault { _ in
 
                 // Act.
                 throw CancellationError()
@@ -97,7 +135,7 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         do {
 
             // Arrange.
-            try await customWithAppWithFaultyService(environment: .testing) { _ in
+            try await customWithAppWithFaultyService { _ in
 
                 // Act.
                 throw CancellationError()
@@ -109,39 +147,47 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         }
     }
 
-    @Test("customWithApp with APP_PORT env should not explode",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func customWithAppWithAppPortEnvShouldNotExplode(environment: Environment) async throws {
+    @Test("customWithApp with APP_PORT env should not explode")
+    func customWithAppWithAppPortEnvShouldNotExplode() async throws {
 
         // Arrange.
         setenv("APP_PORT", "8082", 1)
         defer { unsetenv("APP_PORT") }
 
         // Act.
-        try await customWithApp(environment: environment) { _ in
+        try await customWithApp { _ in
 
             // Assert.
             #expect(true)
         }
     }
 
-    @Test("customWithApp should not explode",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func customWithAppShouldNotExplode(environment: Environment) async throws {
+    @Test("customWithApp should not explode")
+    func customWithAppShouldNotExplode() async throws {
 
         // Arrange and act.
-        try await customWithApp(environment: environment) { _ in
+        try await customWithApp { _ in
 
             // Assert.
             #expect(true)
         }
     }
 
-    @Test("Get on /health/live should return 200",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func getOnHealthLivePathShouldReturnsOK(environment: Environment) async throws {
+    @Test("customWithAppWithDefault should not explode")
+    func customWithAppWithDefaultShouldNotExplode() async throws {
 
-        try await customWithApp(environment: environment) { app in
+        // Arrange and act.
+        try await customWithAppWithDefault { _ in
+
+            // Assert.
+            #expect(true)
+        }
+    }
+
+    @Test("Get on /health/live should return 200")
+    func getOnHealthLivePathShouldReturnsOK() async throws {
+
+        try await customWithApp { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .ok
@@ -161,11 +207,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         }
     }
 
-    @Test("Get on /health/ready should return 200",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func getOnHealthReadyPathShouldReturnsOK(environment: Environment) async throws {
+    @Test("Get on /health/ready should return 200")
+    func getOnHealthReadyPathShouldReturnsOK() async throws {
 
-        try await customWithApp(environment: environment) { app in
+        try await customWithApp { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .ok
@@ -185,11 +230,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         }
     }
 
-    @Test("Get on /health/ready on faulty app should return 503",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func getOnHealthReadyOnPathOnFaulyAppShouldReturns503(environment: Environment) async throws {
+    @Test("Get on /health/ready on faulty app should return 503")
+    func getOnHealthReadyOnPathOnFaulyAppShouldReturns503() async throws {
 
-        try await customWithAppWithFaultyService(environment: environment) { app in
+        try await customWithAppWithFaultyService { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .serviceUnavailable
@@ -212,7 +256,7 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
     @Test("Get on root path should return this welcome message")
     func getOnRootPathShouldReturnsWelcomeMessage() async throws {
 
-        try await withApp(configure: { app in try await FoodHelperRecipeWebserviceFactory.configure(app) }, { app in
+        try await customWithApp { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .ok
@@ -232,15 +276,14 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
                     #expect(expectedResponse == actualResponse)
                 }
             )
-        })
+        }
     }
 
-    @Test("Get on path /recipe should return all recipes",
-          arguments: [Environment.development, Environment.testing, Environment.production])
+    @Test("Get on path /recipe should return all recipes")
 // swiftlint:disable function_body_length
-    func getOnPathKernelRecipeShouldReturnAllRecipes(environment: Environment) async throws {
+    func getOnPathKernelRecipeShouldReturnAllRecipes() async throws {
 
-        try await customWithApp(environment: environment) { app in
+        try await customWithApp { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .ok
@@ -421,11 +464,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
 // swiftlint:enable function_body_length
 
 // swiftlint:disable function_body_length
-    @Test("Get on path /recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D should return this recipe",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func getOnPathKernelRecipeWithIdShouldReturnThisRecipe(environment: Environment) async throws {
+    @Test("Get on path /recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D should return this recipe")
+    func getOnPathKernelRecipeWithIdShouldReturnThisRecipe() async throws {
 
-        try await customWithApp(environment: environment) { app in
+        try await customWithApp { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .ok
@@ -603,11 +645,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
     }
 // swiftlint:enable function_body_length
 
-    @Test("Get on path /recipe/not-an-uuid should return 400 bad request",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func getOnPathKernelRecipeWithUnInvalidUUIDShouldReturn400BadRequest(environment: Environment) async throws {
+    @Test("Get on path /recipe/not-an-uuid should return 400 bad request")
+    func getOnPathKernelRecipeWithUnInvalidUUIDShouldReturn400BadRequest() async throws {
 
-        try await customWithApp(environment: environment) { app in
+        try await customWithApp { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .badRequest
@@ -635,11 +676,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         }
     }
 
-    @Test("Get on path /recipe/unknown-uuid should return 404 not found",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func getOnPathKernelRecipeWithUnknownIdShouldReturn404NotFound(environment: Environment) async throws {
+    @Test("Get on path /recipe/unknown-uuid should return 404 not found")
+    func getOnPathKernelRecipeWithUnknownIdShouldReturn404NotFound() async throws {
 
-        try await customWithApp(environment: environment) { app in
+        try await customWithApp { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .notFound
@@ -667,11 +707,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         }
     }
 
-    @Test("Get on path /recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D on faulty app should return internal error",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func getOnPathKernelRecipeWithIdOnFaultyAppShouldReturnInternalError(environment: Environment) async throws {
+    @Test("Get on path /recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D on faulty app should return internal error")
+    func getOnPathKernelRecipeWithIdOnFaultyAppShouldReturnInternalError() async throws {
 
-        try await customWithAppWithFaultyService(environment: environment) { app in
+        try await customWithAppWithFaultyService { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .internalServerError
@@ -692,11 +731,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
     }
 
     // swiftlint:disable function_body_length
-    @Test("Post on path /recipe should return 201",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func postOnPathKernelRecipeShouldReturn201(environment: Environment) async throws {
+    @Test("Post on path /recipe should return 201")
+    func postOnPathKernelRecipeShouldReturn201() async throws {
 
-        try await customWithApp(environment: environment) { app in
+        try await customWithApp { app in
 
             // Arrange.
             let expectedPostStatus: HTTPResponseStatus = .created
@@ -1051,11 +1089,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
     }
     // swiftlint:enable function_body_length
 
-    @Test("Post on path /recipe with invalid json should return 400",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func postOnPathKernelRecipeWithInvalidJSONShouldReturn400(environment: Environment) async throws {
+    @Test("Post on path /recipe with invalid json should return 400")
+    func postOnPathKernelRecipeWithInvalidJSONShouldReturn400() async throws {
 
-        try await customWithApp(environment: environment) { app in
+        try await customWithApp { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .badRequest
@@ -1088,11 +1125,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
     }
 
     // swiftlint:disable function_body_length
-    @Test("Post on path /recipe on faulty app should return internal error",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func postOnPathKernelRecipeWithInvalidJSONShouldReturnInternalError(environment: Environment) async throws {
+    @Test("Post on path /recipe on faulty app should return internal error")
+    func postOnPathKernelRecipeWithInvalidJSONShouldReturnInternalError() async throws {
 
-        try await customWithAppWithFaultyService(environment: environment) { app in
+        try await customWithAppWithFaultyService { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .internalServerError
@@ -1272,11 +1308,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
     // swiftlint:enable function_body_length
 
     // swiftlint:disable function_body_length
-        @Test("Post on path /recipe with an existing recipe should return 201",
-              arguments: [Environment.development, Environment.testing, Environment.production])
-        func postOnPathKernelRecipeWithExistingRecipeShouldReturn201(environment: Environment) async throws {
+        @Test("Post on path /recipe with an existing recipe should return 201")
+        func postOnPathKernelRecipeWithExistingRecipeShouldReturn201() async throws {
 
-            try await customWithApp(environment: environment) { app in
+            try await customWithApp { app in
 
                 // Arrange.
                 let expectedPostStatus: HTTPResponseStatus = .created
@@ -1631,11 +1666,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         }
     // swiftlint:enable function_body_length
 
-        @Test("Post on path /recipe with a new small recipe should return 201",
-              arguments: [Environment.development, Environment.testing, Environment.production])
-        func postOnPathKernelRecipeWithNewSimpleRecipeShouldReturn201(environment: Environment) async throws {
+        @Test("Post on path /recipe with a new small recipe should return 201")
+        func postOnPathKernelRecipeWithNewSimpleRecipeShouldReturn201() async throws {
 
-            try await customWithApp(environment: environment) { app in
+            try await customWithApp { app in
 
                 // Arrange.
                 let expectedPostStatus: HTTPResponseStatus = .created
@@ -1695,11 +1729,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
             }
         }
 
-    @Test("Delete on path /recipe/{uuid} should return 204 and remove recipe",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func deleteOnPathKernelRecipeShouldReturn200AndRemoveRecipe(environment: Environment) async throws {
+    @Test("Delete on path /recipe/{uuid} should return 204 and remove recipe")
+    func deleteOnPathKernelRecipeShouldReturn200AndRemoveRecipe() async throws {
 
-        try await customWithApp(environment: environment) { app in
+        try await customWithApp { app in
 
             // Arrange.
             let expectedDeleteStatus: HTTPResponseStatus = .noContent
@@ -1732,11 +1765,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         }
     }
 
-    @Test("Delete on path /recipe/{uuid} on faulty app should return internal server error",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func deleteOnPathKernelRecipeOnFaultyAppShouldReturnCantAccessData(environment: Environment) async throws {
+    @Test("Delete on path /recipe/{uuid} on faulty app should return internal server error")
+    func deleteOnPathKernelRecipeOnFaultyAppShouldReturnCantAccessData() async throws {
 
-        try await customWithAppWithFaultyService(environment: environment) { app in
+        try await customWithAppWithFaultyService { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .internalServerError
@@ -1756,11 +1788,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         }
     }
 
-    @Test("Delete on path /recipe/not-an-uuid should return 400 bad request",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func deleteOnPathKernelRecipeWithUnInvalidUUIDShouldReturn400BadRequest(environment: Environment) async throws {
+    @Test("Delete on path /recipe/not-an-uuid should return 400 bad request")
+    func deleteOnPathKernelRecipeWithUnInvalidUUIDShouldReturn400BadRequest() async throws {
 
-        try await customWithApp(environment: environment) { app in
+        try await customWithApp { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .badRequest
@@ -1788,11 +1819,10 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
         }
     }
 
-    @Test("Delete on path /recipe/unknown-uuid should return 204",
-          arguments: [Environment.development, Environment.testing, Environment.production])
-    func deleteOnPathKernelRecipeWithUnknownIdShouldReturn404(environment: Environment) async throws {
+    @Test("Delete on path /recipe/unknown-uuid should return 204")
+    func deleteOnPathKernelRecipeWithUnknownIdShouldReturn404() async throws {
 
-        try await customWithApp(environment: environment) { app in
+        try await customWithApp { app in
 
             // Arrange.
             let expectedStatus: HTTPResponseStatus = .noContent
