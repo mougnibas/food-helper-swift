@@ -25,13 +25,17 @@ let package = Package(
     dependencies: [
 
         // SwiftLint (code style).
-        .package(url: "https://github.com/SimplyDanny/SwiftLintPlugins", exact: "0.63.0"),
+        .package(url: "https://github.com/SimplyDanny/SwiftLintPlugins",   exact: "0.63.0"),
 
         // Kernel.
         .package(path: "../FoodHelperKernel"),
 
         // Vapor (swift http framework).
-        .package(url: "https://github.com/vapor/vapor.git", exact: "4.121.0")
+        .package(url: "https://github.com/vapor/vapor.git",                exact: "4.121.0"),
+
+        // Vapor Fluent with drivers (swift ORM).
+        .package(url: "https://github.com/vapor/fluent.git",               exact: "4.13.0"),
+        .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", exact: "4.8.1")
     ],
 
     // We have the following targets.
@@ -41,10 +45,10 @@ let package = Package(
         .target(
             name: "FoodHelperRecipe",
             dependencies: [
-                .product(name: "FoodHelperKernel", package: "FoodHelperKernel"),
+                .product(name: "FoodHelperKernel",                   package: "FoodHelperKernel"),
             ],
             plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")
+                .plugin(name: "SwiftLintBuildToolPlugin",            package: "SwiftLintPlugins")
             ]
         ),
 
@@ -55,7 +59,7 @@ let package = Package(
                 "FoodHelperRecipe"
             ],
             plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")
+                .plugin(name: "SwiftLintBuildToolPlugin",            package: "SwiftLintPlugins")
             ]
         ),
         .testTarget(
@@ -67,7 +71,7 @@ let package = Package(
                 .product(name: "FoodHelperKernelDataAccessInMemory", package: "FoodHelperKernel")
             ],
             plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")
+                .plugin(name: "SwiftLintBuildToolPlugin",            package: "SwiftLintPlugins")
             ]
         ),
 
@@ -82,17 +86,30 @@ let package = Package(
                 .product(name: "Vapor", package: "vapor")
             ],
             plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")
+                .plugin(name: "SwiftLintBuildToolPlugin",            package: "SwiftLintPlugins")
+            ]
+        ),
+        .testTarget(
+            name: "FoodHelperRecipeTestsWebserviceUnit",
+            dependencies: [
+                "FoodHelperRecipeWebservice",
+                .product(name: "VaporTesting",                       package: "vapor")
+            ],
+            plugins: [
+                .plugin(name: "SwiftLintBuildToolPlugin",            package: "SwiftLintPlugins")
             ]
         ),
         .testTarget(
             name: "FoodHelperRecipeTestsWebserviceIntegration",
             dependencies: [
                 "FoodHelperRecipeWebservice",
-                .product(name: "VaporTesting", package: "vapor")
+                .product(name: "FoodHelperKernelDataAccessFluent",   package: "FoodHelperKernel"),
+                .product(name: "VaporTesting",                       package: "vapor"),
+                .product(name: "Fluent",                             package: "fluent"),
+                .product(name: "FluentSQLiteDriver",                 package: "fluent-sqlite-driver")
             ],
             plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")
+                .plugin(name: "SwiftLintBuildToolPlugin",            package: "SwiftLintPlugins")
             ]
         )
     ]

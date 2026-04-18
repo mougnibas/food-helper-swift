@@ -108,6 +108,15 @@ tests_unit() {
         exit 1
     fi
 
+    echo "Running Unit tests: FoodHelperRecipeTestsWebserviceUnit: ..."
+    if xcodebuild -scheme FoodHelperRecipeTestsWebserviceUnit test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
+        echo "Running Unit tests: FoodHelperRecipeTestsWebserviceUnit: SUCCESS"
+        open_latest_xcresult
+    else
+        echo "Running Unit tests: FoodHelperRecipeTestsWebserviceUnit: FAILURE (see $LOG_FILE)" >&2
+        exit 1
+    fi
+
     echo "Running Unit tests: SUCCESS"
     echo
 }
@@ -160,6 +169,16 @@ tests_integration() {
         open_latest_xcresult
     else
         echo "Running Integration tests: FoodHelperKernelTestsClientIntegration: FAILURE (see $LOG_FILE)" >&2
+        stop_mariadb_on_failure
+        exit 1
+    fi
+
+    echo "Running Integration tests: FoodHelperRecipeTestsWebserviceIntegration: ..."
+    if xcodebuild -scheme FoodHelperRecipeTestsWebserviceIntegration test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
+        echo "Running Integration tests: FoodHelperRecipeTestsWebserviceIntegration: SUCCESS"
+        open_latest_xcresult
+    else
+        echo "Running Integration tests: FoodHelperRecipeTestsWebserviceIntegration: FAILURE (see $LOG_FILE)" >&2
         stop_mariadb_on_failure
         exit 1
     fi

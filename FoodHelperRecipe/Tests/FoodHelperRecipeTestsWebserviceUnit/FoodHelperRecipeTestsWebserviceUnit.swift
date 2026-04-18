@@ -10,18 +10,16 @@ import Testing
 
 import Vapor
 import VaporTesting
-import Fluent
-import FluentSQLiteDriver
 
 import FoodHelperKernel
 import FoodHelperKernelImpl
-import FoodHelperKernelDataAccessFluent
+import FoodHelperKernelDataAccessInMemory
 import FoodHelperRecipe
 import FoodHelperRecipeImpl
 
 @testable import FoodHelperRecipeWebservice
 
-@Suite("Webservice route Integration Tests")
+@Suite("Webservice route Unit Tests")
 
 actor FoodHelperRecipeFaultyImpl: FoodHelperRecipe {
 
@@ -44,9 +42,7 @@ actor FoodHelperRecipeFaultyImpl: FoodHelperRecipe {
 
 // swiftlint:disable file_length
 // swiftlint:disable type_body_length
-// swiftlint:disable type_name
-struct FoodHelperRecipeTestsWebserviceIntegration {
-// swiftlint:enable type_name
+struct FoodHelperRecipeTestsWebserviceUnit {
 
     private func customWithAppWithDefault(_ test: (Application) async throws -> Void) async throws {
 
@@ -64,25 +60,17 @@ struct FoodHelperRecipeTestsWebserviceIntegration {
 
     private func customWithApp(_ test: (Application) async throws -> Void) async throws {
 
+        // Business objects.
+        let dataAccess = FoodHelperKernelDataAccessInMemory()
+        let kernel = try await FoodHelperKernelImpl(dataAccess: dataAccess)
+        let service = FoodHelperRecipeImpl(kernel)
+
         // Vapor wiring.
         let app = try await Application.make(.testing)
         do {
-
-            // Fluent and SQLite setup.
-            app.databases.use(.sqlite(.memory), as: .sqlite)
-            app.migrations.add(Migration000())
-            try await app.autoMigrate()
-
-            // Business objects.
-            let dataAccess = try await FoodHelperKernelDataAccessFluent(app.db)
-            let kernel = try await FoodHelperKernelImpl(dataAccess: dataAccess)
-            let service = FoodHelperRecipeImpl(kernel)
-
             try await FoodHelperRecipeWebserviceFactory.configure(app, service)
             try await test(app)
-            try await app.autoRevert()
         } catch {
-            try? await app.autoRevert()
             try await app.asyncShutdown()
             throw error
         }
