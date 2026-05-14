@@ -22,6 +22,16 @@ struct FoodHelperRecipeWebserviceController: RouteCollection {
 
     func boot(routes: any RoutesBuilder) throws {
 
+        // Guard Middleware for user.
+        let routesForUser = routes
+            .grouped(UserBasicAuthenticator())
+            .grouped(User.guardMiddleware())
+
+        // Guard Middleware for admin.
+        let routesForAdmin = routes
+            .grouped(AdminBasicAuthenticator())
+            .grouped(User.guardMiddleware())
+
         // GET
         routes.get { _ in
             "Welcome to FoodHelperRecipeWebservice!"
@@ -34,16 +44,16 @@ struct FoodHelperRecipeWebserviceController: RouteCollection {
         routes.get("health", "ready", use: getHealthReady)
 
         // GET /recipe
-        routes.get("recipe", use: getRecipes)
+        routesForUser.get("recipe", use: getRecipes)
 
         // GET /recipe/{uuid}
-        routes.get("recipe", ":uuid", use: getRecipeById)
+        routesForUser.get("recipe", ":uuid", use: getRecipeById)
 
         // DELETE /recipe/{uuid}
-        routes.delete("recipe", ":uuid", use: deleteRecipeById)
+        routesForAdmin.delete("recipe", ":uuid", use: deleteRecipeById)
 
         // POST /recipe
-        routes.post("recipe", use: postRecipe)
+        routesForAdmin.post("recipe", use: postRecipe)
     }
 
     func getHealthLive(req: Request) async throws -> HTTPStatus {

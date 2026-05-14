@@ -9,8 +9,12 @@ import Foundation
 
 import Vapor
 
-struct BasicRequestAuthenticator: RequestAuthenticator {
-    func authenticate(request: Request) -> EventLoopFuture<Void> {
-        request.eventLoop.makeSucceededFuture(())
+struct UserBasicAuthenticator: AsyncBasicAuthenticator {
+
+    func authenticate(basic: BasicAuthorization, for request: Request) async throws {
+        if basic.username == "user" && basic.password == "secret" {
+            request.auth.login(User(name: "Authenticated test user"))
+        }
     }
+
 }

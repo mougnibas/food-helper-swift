@@ -277,8 +277,108 @@ struct FoodHelperRecipeTestsWebserviceUnit {
         }
     }
 
+    @Test("Get on path /recipe without auth should return 401")
+    func getOnPathRecipeWithoutAuthShouldReturn401() async throws {
+
+        try await customWithApp { app in
+
+            // Arrange.
+            let expectedStatus: HTTPResponseStatus = .unauthorized
+
+            // Act.
+            try await app.testing().test(
+                .GET,
+                "/recipe",
+                afterResponse: { response async throws in
+
+                    let actualStatus = response.status
+
+                    // Assert.
+                    #expect(expectedStatus == actualStatus)
+                }
+            )
+        }
+    }
+
+    @Test("Get on path /recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D without auth should return 401")
+    func getOnPathKernelRecipeWithIdWithoutAuthShouldReturn401() async throws {
+
+        try await customWithApp { app in
+
+            // Arrange.
+            let expectedStatus: HTTPResponseStatus = .unauthorized
+
+            // Act.
+            try await app.testing().test(
+                .GET,
+                "/recipe",
+                afterResponse: { response async throws in
+
+                    let actualStatus = response.status
+
+                    // Assert.
+                    #expect(expectedStatus == actualStatus)
+                }
+            )
+        }
+    }
+
+    @Test("Post on path /recipe without auth should return 401")
+    func postOnPathRecipeWithoutAuthShouldReturn401() async throws {
+
+        try await customWithApp { app in
+
+            // Arrange.
+            let expectedStatus: HTTPResponseStatus = .unauthorized
+            let jsonData = Data(#"{"id":"00000000-0000-0000-0000-000000000000","name":"Pizza","steps":[]}"#.utf8)
+
+            // Act.
+            try await app.testing().test(
+                .POST,
+                "/recipe",
+                headers: [
+                    "Authorization": "Basic " + ("user:secret".base64String())
+                ],
+                body: .init(data: jsonData),
+                afterResponse: { response async throws in
+
+                    let actualStatus = response.status
+
+                    // Assert.
+                    #expect(expectedStatus == actualStatus)
+                }
+            )
+        }
+    }
+
+    @Test("Delete on path /recipe with user auth should return 401")
+    func deleteOnPathRecipeWithUserAuthShouldReturn401() async throws {
+
+        try await customWithApp { app in
+
+            // Arrange.
+            let expectedStatus: HTTPResponseStatus = .unauthorized
+
+            // Act.
+            try await app.testing().test(
+                .DELETE,
+                "/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
+                headers: [
+                    "Authorization": "Basic " + ("user:secret".base64String())
+                ],
+                afterResponse: { response async throws in
+
+                    let actualStatus = response.status
+
+                    // Assert.
+                    #expect(expectedStatus == actualStatus)
+                }
+            )
+        }
+    }
+
+    // swiftlint:disable function_body_length
     @Test("Get on path /recipe should return all recipes")
-// swiftlint:disable function_body_length
     func getOnPathKernelRecipeShouldReturnAllRecipes() async throws {
 
         try await customWithApp { app in
@@ -447,6 +547,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .GET,
                 "/recipe",
+                headers: [
+                    "Authorization": "Basic " + ("user:secret".base64String())
+                ],
                 afterResponse: { response async throws in
 
                     let actualStatus = response.status
@@ -459,9 +562,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             )
         }
     }
-// swiftlint:enable function_body_length
+    // swiftlint:enable function_body_length
 
-// swiftlint:disable function_body_length
+    // swiftlint:disable function_body_length
     @Test("Get on path /recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D should return this recipe")
     func getOnPathKernelRecipeWithIdShouldReturnThisRecipe() async throws {
 
@@ -629,6 +732,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .GET,
                 "/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
+                headers: [
+                    "Authorization": "Basic " + ("user:secret".base64String())
+                ],
                 afterResponse: { response async throws in
 
                     let actualStatus = response.status
@@ -641,7 +747,7 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             )
         }
     }
-// swiftlint:enable function_body_length
+    // swiftlint:enable function_body_length
 
     @Test("Get on path /recipe/not-an-uuid should return 400 bad request")
     func getOnPathKernelRecipeWithUnInvalidUUIDShouldReturn400BadRequest() async throws {
@@ -661,6 +767,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .GET,
                 "/recipe/im-not-a-valid-uuid",
+                headers: [
+                    "Authorization": "Basic " + ("user:secret".base64String())
+                ],
                 afterResponse: { response async throws in
 
                     let actualStatus = response.status
@@ -692,6 +801,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .GET,
                 "/recipe/00000000-0000-0000-0000-000000000000",
+                headers: [
+                    "Authorization": "Basic " + ("user:secret".base64String())
+                ],
                 afterResponse: { response async throws in
 
                     let actualStatus = response.status
@@ -717,6 +829,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .GET,
                 "/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
+                headers: [
+                    "Authorization": "Basic " + ("user:secret".base64String())
+                ],
                 afterResponse: { response async throws in
 
                     let actualStatus = response.status
@@ -899,7 +1014,10 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .POST,
                 "/recipe",
-                headers: ["Content-Type": "application/json"],
+                headers: [
+                    "Authorization": "Basic " + ("admin:adminadmin".base64String()),
+                    "Content-Type": "application/json"
+                ],
                 body: .init(data: jsonData),
                 afterResponse: { response async throws in
 
@@ -1073,6 +1191,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .GET,
                 "/recipe/A68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
+                headers: [
+                    "Authorization": "Basic " + ("user:secret".base64String())
+                ],
                 afterResponse: { response async throws in
 
                     let actualStatus = response.status
@@ -1107,7 +1228,10 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .POST,
                 "/recipe",
-                headers: ["Content-Type": "application/json"],
+                headers: [
+                    "Authorization": "Basic " + ("admin:adminadmin".base64String()),
+                    "Content-Type": "application/json"
+                ],
                 body: .init(data: jsonData),
                 afterResponse: { response async throws in
 
@@ -1291,7 +1415,10 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .POST,
                 "/recipe",
-                headers: ["Content-Type": "application/json"],
+                headers: [
+                    "Authorization": "Basic " + ("admin:adminadmin".base64String()),
+                    "Content-Type": "application/json"
+                ],
                 body: .init(data: jsonData),
                 afterResponse: { response async throws in
 
@@ -1306,426 +1433,440 @@ struct FoodHelperRecipeTestsWebserviceUnit {
     // swiftlint:enable function_body_length
 
     // swiftlint:disable function_body_length
-        @Test("Post on path /recipe with an existing recipe should return 201")
-        func postOnPathKernelRecipeWithExistingRecipeShouldReturn201() async throws {
+    @Test("Post on path /recipe with an existing recipe should return 201")
+    func postOnPathKernelRecipeWithExistingRecipeShouldReturn201() async throws {
 
-            try await customWithApp { app in
+        try await customWithApp { app in
 
-                // Arrange.
-                let expectedPostStatus: HTTPResponseStatus = .created
-                let expectedPostResponse = ""
-                let expectedPostResponseHeaderLocation = "/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D"
-                let json = #"""
+            // Arrange.
+            let expectedPostStatus: HTTPResponseStatus = .created
+            let expectedPostResponse = ""
+            let expectedPostResponseHeaderLocation = "/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D"
+            let json = #"""
+            {
+              "id" : "B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
+              "name" : "Tartine façon Zoé (Thème Narutooo)",
+              "steps" : [
                 {
-                  "id" : "B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
-                  "name" : "Tartine façon Zoé (Thème Narutooo)",
-                  "steps" : [
+                  "foods" : [
                     {
-                      "foods" : [
-                        {
-                          "name" : "Oignons",
-                          "quantity" : 100,
-                          "unit" : "gram"
-                        },
-                        {
-                          "name" : "Huile d'olive",
-                          "quantity" : 20,
-                          "unit" : "gram"
-                        },
-                        {
-                          "name" : "Dès de tomates en conserve",
-                          "quantity" : 250,
-                          "unit" : "gram"
-                        },
-                        {
-                          "name" : "Sucre",
-                          "quantity" : 30,
-                          "unit" : "gram"
-                        },
-                        {
-                          "name" : "Sel",
-                          "quantity" : 10,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Eplucher les oignons.",
-                        "Emincer les oignons.",
-                        "Verser l'huile d'olive dans une poële et faire chauffer à feu vif.",
-                        "Ajouter les oignons et faire cuire jusqu'à ce qu'ils soit translucide. Remuser souvent.",
-                        "Baisser le feu, puis ajouter les dès de tomates.",
-                        "Ajouter le sucre (pour casser l'acidité de la tomate) et le sel. Laisser cuire 5 minutes.",
-                        "Réserver la sauce dans un bol."
-                      ],
-                      "title" : "On prépare la sauce."
+                      "name" : "Oignons",
+                      "quantity" : 100,
+                      "unit" : "gram"
                     },
                     {
-                      "foods" : [
-                        {
-                          "name" : "Comté",
-                          "quantity" : 200,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Raper le fromage",
-                        "Réserver le fromage rapé dans un bol."
-                      ],
-                      "title" : "Ca va raper !"
+                      "name" : "Huile d'olive",
+                      "quantity" : 20,
+                      "unit" : "gram"
                     },
                     {
-                      "foods" : [
-                        {
-                          "name" : "Jambon blanc",
-                          "quantity" : 150,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Couper grossièrement le jambon blanc.",
-                        "Réserver dans un bol."
-                      ],
-                      "title" : "On prépare le jambon."
+                      "name" : "Dès de tomates en conserve",
+                      "quantity" : 250,
+                      "unit" : "gram"
                     },
                     {
-                      "foods" : [
-                        {
-                          "name" : "Olives noires",
-                          "quantity" : 50,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Couper les olives en fines tranches",
-                        "Réserver dans un bol."
-                      ],
-                      "title" : "Et les olives alors ?"
+                      "name" : "Sucre",
+                      "quantity" : 30,
+                      "unit" : "gram"
                     },
                     {
-                      "foods" : [
-                        {
-                          "name" : "Champignon de Paris",
-                          "quantity" : 100,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Nettoyer les champignons de Paris (à l'eau, puis les essyuer avec un essuie-tout)",
-                        "Les couper en tranches moyenne.",
-                        "Réserver dans un bol."
-                      ],
-                      "title" : "Les (bons ?) champigons de Paris."
-                    },
-                    {
-                      "foods" : [
-                        {
-                          "name" : "Pain",
-                          "quantity" : 250,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Trancher le pain en fine tranches.",
-                        "Arrondir les angles pour en faire une forme en bandeau.",
-                        "Recouvrir une plate de cuisson de papier sulfurisé.",
-                        "Répartir les tranches de pains sur la plaque."
-                      ],
-                      "title" : "On découpe le pain."
-                    },
-                    {
-                      "foods" : [
-                        {
-                          "name" : "Origan",
-                          "quantity" : 10,
-                          "unit" : "gram"
-                        },
-                        {
-                          "name" : "Herbes de provence",
-                          "quantity" : 10,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Etaler la sauce sur les tranches de pains.",
-                        "Etaler le jambon blanc.",
-                        "Etaler le fromage rapé.",
-                        "Etaler les tranches de champignons.",
-                        "Etaler les tranches d'olives.",
-                        "Disposer les épices pour former le signe du village caché souhaité"
-                      ],
-                      "title" : "On assemble, c'est bientôt fini."
-                    },
-                    {
-                      "foods" : [
-
-                      ],
-                      "instructions" : [
-                        "Faire chauffer le four à chaleur tournante à 180°C.",
-                        "Une fois le four à la température souhaitée, enfourner le plaque de cuisson.",
-                        "Surveiller attentivement la cuisson pour l'arrêter au moment souhaité (grillé/fondue).",
-                        "Sortir du four et laisser légèrement refroidir avant de déguster."
-                      ],
-                      "title" : "Au four !"
+                      "name" : "Sel",
+                      "quantity" : 10,
+                      "unit" : "gram"
                     }
-                  ]
-                }
-                """#
-                let jsonData = Data(json.utf8)
-
-                // Act.
-                try await app.testing().test(
-                    .POST,
-                    "/recipe",
-                    headers: ["Content-Type": "application/json"],
-                    body: .init(data: jsonData),
-                    afterResponse: { response async throws in
-
-                        let actualStatus = response.status
-                        let actualResponse = response.body.string
-                        let actualResponseHeaderLocation = response.headers["Location"].first
-
-                        // Assert.
-                        #expect(expectedPostStatus == actualStatus)
-                        #expect(expectedPostResponse == actualResponse)
-                        #expect(expectedPostResponseHeaderLocation == actualResponseHeaderLocation)
-                    }
-                )
-
-                let expectedGetStatus: HTTPResponseStatus = .ok
-                let expectedGetResponse = #"""
+                  ],
+                  "instructions" : [
+                    "Eplucher les oignons.",
+                    "Emincer les oignons.",
+                    "Verser l'huile d'olive dans une poële et faire chauffer à feu vif.",
+                    "Ajouter les oignons et faire cuire jusqu'à ce qu'ils soit translucide. Remuser souvent.",
+                    "Baisser le feu, puis ajouter les dès de tomates.",
+                    "Ajouter le sucre (pour casser l'acidité de la tomate) et le sel. Laisser cuire 5 minutes.",
+                    "Réserver la sauce dans un bol."
+                  ],
+                  "title" : "On prépare la sauce."
+                },
                 {
-                  "id" : "B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
-                  "name" : "Tartine façon Zoé (Thème Narutooo)",
-                  "steps" : [
+                  "foods" : [
                     {
-                      "foods" : [
-                        {
-                          "name" : "Oignons",
-                          "quantity" : 100,
-                          "unit" : "gram"
-                        },
-                        {
-                          "name" : "Huile d'olive",
-                          "quantity" : 20,
-                          "unit" : "gram"
-                        },
-                        {
-                          "name" : "Dès de tomates en conserve",
-                          "quantity" : 250,
-                          "unit" : "gram"
-                        },
-                        {
-                          "name" : "Sucre",
-                          "quantity" : 30,
-                          "unit" : "gram"
-                        },
-                        {
-                          "name" : "Sel",
-                          "quantity" : 10,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Eplucher les oignons.",
-                        "Emincer les oignons.",
-                        "Verser l'huile d'olive dans une poële et faire chauffer à feu vif.",
-                        "Ajouter les oignons et faire cuire jusqu'à ce qu'ils soit translucide. Remuser souvent.",
-                        "Baisser le feu, puis ajouter les dès de tomates.",
-                        "Ajouter le sucre (pour casser l'acidité de la tomate) et le sel. Laisser cuire 5 minutes.",
-                        "Réserver la sauce dans un bol."
-                      ],
-                      "title" : "On prépare la sauce."
-                    },
-                    {
-                      "foods" : [
-                        {
-                          "name" : "Comté",
-                          "quantity" : 200,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Raper le fromage",
-                        "Réserver le fromage rapé dans un bol."
-                      ],
-                      "title" : "Ca va raper !"
-                    },
-                    {
-                      "foods" : [
-                        {
-                          "name" : "Jambon blanc",
-                          "quantity" : 150,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Couper grossièrement le jambon blanc.",
-                        "Réserver dans un bol."
-                      ],
-                      "title" : "On prépare le jambon."
-                    },
-                    {
-                      "foods" : [
-                        {
-                          "name" : "Olives noires",
-                          "quantity" : 50,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Couper les olives en fines tranches",
-                        "Réserver dans un bol."
-                      ],
-                      "title" : "Et les olives alors ?"
-                    },
-                    {
-                      "foods" : [
-                        {
-                          "name" : "Champignon de Paris",
-                          "quantity" : 100,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Nettoyer les champignons de Paris (à l'eau, puis les essyuer avec un essuie-tout)",
-                        "Les couper en tranches moyenne.",
-                        "Réserver dans un bol."
-                      ],
-                      "title" : "Les (bons ?) champigons de Paris."
-                    },
-                    {
-                      "foods" : [
-                        {
-                          "name" : "Pain",
-                          "quantity" : 250,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Trancher le pain en fine tranches.",
-                        "Arrondir les angles pour en faire une forme en bandeau.",
-                        "Recouvrir une plate de cuisson de papier sulfurisé.",
-                        "Répartir les tranches de pains sur la plaque."
-                      ],
-                      "title" : "On découpe le pain."
-                    },
-                    {
-                      "foods" : [
-                        {
-                          "name" : "Origan",
-                          "quantity" : 10,
-                          "unit" : "gram"
-                        },
-                        {
-                          "name" : "Herbes de provence",
-                          "quantity" : 10,
-                          "unit" : "gram"
-                        }
-                      ],
-                      "instructions" : [
-                        "Etaler la sauce sur les tranches de pains.",
-                        "Etaler le jambon blanc.",
-                        "Etaler le fromage rapé.",
-                        "Etaler les tranches de champignons.",
-                        "Etaler les tranches d'olives.",
-                        "Disposer les épices pour former le signe du village caché souhaité"
-                      ],
-                      "title" : "On assemble, c'est bientôt fini."
-                    },
-                    {
-                      "foods" : [
-
-                      ],
-                      "instructions" : [
-                        "Faire chauffer le four à chaleur tournante à 180°C.",
-                        "Une fois le four à la température souhaitée, enfourner le plaque de cuisson.",
-                        "Surveiller attentivement la cuisson pour l'arrêter au moment souhaité (grillé/fondue).",
-                        "Sortir du four et laisser légèrement refroidir avant de déguster."
-                      ],
-                      "title" : "Au four !"
+                      "name" : "Comté",
+                      "quantity" : 200,
+                      "unit" : "gram"
                     }
-                  ]
+                  ],
+                  "instructions" : [
+                    "Raper le fromage",
+                    "Réserver le fromage rapé dans un bol."
+                  ],
+                  "title" : "Ca va raper !"
+                },
+                {
+                  "foods" : [
+                    {
+                      "name" : "Jambon blanc",
+                      "quantity" : 150,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Couper grossièrement le jambon blanc.",
+                    "Réserver dans un bol."
+                  ],
+                  "title" : "On prépare le jambon."
+                },
+                {
+                  "foods" : [
+                    {
+                      "name" : "Olives noires",
+                      "quantity" : 50,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Couper les olives en fines tranches",
+                    "Réserver dans un bol."
+                  ],
+                  "title" : "Et les olives alors ?"
+                },
+                {
+                  "foods" : [
+                    {
+                      "name" : "Champignon de Paris",
+                      "quantity" : 100,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Nettoyer les champignons de Paris (à l'eau, puis les essyuer avec un essuie-tout)",
+                    "Les couper en tranches moyenne.",
+                    "Réserver dans un bol."
+                  ],
+                  "title" : "Les (bons ?) champigons de Paris."
+                },
+                {
+                  "foods" : [
+                    {
+                      "name" : "Pain",
+                      "quantity" : 250,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Trancher le pain en fine tranches.",
+                    "Arrondir les angles pour en faire une forme en bandeau.",
+                    "Recouvrir une plate de cuisson de papier sulfurisé.",
+                    "Répartir les tranches de pains sur la plaque."
+                  ],
+                  "title" : "On découpe le pain."
+                },
+                {
+                  "foods" : [
+                    {
+                      "name" : "Origan",
+                      "quantity" : 10,
+                      "unit" : "gram"
+                    },
+                    {
+                      "name" : "Herbes de provence",
+                      "quantity" : 10,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Etaler la sauce sur les tranches de pains.",
+                    "Etaler le jambon blanc.",
+                    "Etaler le fromage rapé.",
+                    "Etaler les tranches de champignons.",
+                    "Etaler les tranches d'olives.",
+                    "Disposer les épices pour former le signe du village caché souhaité"
+                  ],
+                  "title" : "On assemble, c'est bientôt fini."
+                },
+                {
+                  "foods" : [
+
+                  ],
+                  "instructions" : [
+                    "Faire chauffer le four à chaleur tournante à 180°C.",
+                    "Une fois le four à la température souhaitée, enfourner le plaque de cuisson.",
+                    "Surveiller attentivement la cuisson pour l'arrêter au moment souhaité (grillé/fondue).",
+                    "Sortir du four et laisser légèrement refroidir avant de déguster."
+                  ],
+                  "title" : "Au four !"
                 }
-                """#
-                try await app.testing().test(
-                    .GET,
-                    "/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
-                    afterResponse: { response async throws in
-
-                        let actualStatus = response.status
-                        let actualResponse = response.body.string
-
-                        // Assert.
-                        #expect(expectedGetStatus == actualStatus)
-                        #expect(expectedGetResponse == actualResponse)
-                    }
-                )
+              ]
             }
+            """#
+            let jsonData = Data(json.utf8)
+
+            // Act.
+            try await app.testing().test(
+                .POST,
+                "/recipe",
+                headers: [
+                    "Authorization": "Basic " + ("admin:adminadmin".base64String()),
+                    "Content-Type": "application/json"
+                ],
+                body: .init(data: jsonData),
+                afterResponse: { response async throws in
+
+                    let actualStatus = response.status
+                    let actualResponse = response.body.string
+                    let actualResponseHeaderLocation = response.headers["Location"].first
+
+                    // Assert.
+                    #expect(expectedPostStatus == actualStatus)
+                    #expect(expectedPostResponse == actualResponse)
+                    #expect(expectedPostResponseHeaderLocation == actualResponseHeaderLocation)
+                }
+            )
+
+            let expectedGetStatus: HTTPResponseStatus = .ok
+            let expectedGetResponse = #"""
+            {
+              "id" : "B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
+              "name" : "Tartine façon Zoé (Thème Narutooo)",
+              "steps" : [
+                {
+                  "foods" : [
+                    {
+                      "name" : "Oignons",
+                      "quantity" : 100,
+                      "unit" : "gram"
+                    },
+                    {
+                      "name" : "Huile d'olive",
+                      "quantity" : 20,
+                      "unit" : "gram"
+                    },
+                    {
+                      "name" : "Dès de tomates en conserve",
+                      "quantity" : 250,
+                      "unit" : "gram"
+                    },
+                    {
+                      "name" : "Sucre",
+                      "quantity" : 30,
+                      "unit" : "gram"
+                    },
+                    {
+                      "name" : "Sel",
+                      "quantity" : 10,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Eplucher les oignons.",
+                    "Emincer les oignons.",
+                    "Verser l'huile d'olive dans une poële et faire chauffer à feu vif.",
+                    "Ajouter les oignons et faire cuire jusqu'à ce qu'ils soit translucide. Remuser souvent.",
+                    "Baisser le feu, puis ajouter les dès de tomates.",
+                    "Ajouter le sucre (pour casser l'acidité de la tomate) et le sel. Laisser cuire 5 minutes.",
+                    "Réserver la sauce dans un bol."
+                  ],
+                  "title" : "On prépare la sauce."
+                },
+                {
+                  "foods" : [
+                    {
+                      "name" : "Comté",
+                      "quantity" : 200,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Raper le fromage",
+                    "Réserver le fromage rapé dans un bol."
+                  ],
+                  "title" : "Ca va raper !"
+                },
+                {
+                  "foods" : [
+                    {
+                      "name" : "Jambon blanc",
+                      "quantity" : 150,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Couper grossièrement le jambon blanc.",
+                    "Réserver dans un bol."
+                  ],
+                  "title" : "On prépare le jambon."
+                },
+                {
+                  "foods" : [
+                    {
+                      "name" : "Olives noires",
+                      "quantity" : 50,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Couper les olives en fines tranches",
+                    "Réserver dans un bol."
+                  ],
+                  "title" : "Et les olives alors ?"
+                },
+                {
+                  "foods" : [
+                    {
+                      "name" : "Champignon de Paris",
+                      "quantity" : 100,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Nettoyer les champignons de Paris (à l'eau, puis les essyuer avec un essuie-tout)",
+                    "Les couper en tranches moyenne.",
+                    "Réserver dans un bol."
+                  ],
+                  "title" : "Les (bons ?) champigons de Paris."
+                },
+                {
+                  "foods" : [
+                    {
+                      "name" : "Pain",
+                      "quantity" : 250,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Trancher le pain en fine tranches.",
+                    "Arrondir les angles pour en faire une forme en bandeau.",
+                    "Recouvrir une plate de cuisson de papier sulfurisé.",
+                    "Répartir les tranches de pains sur la plaque."
+                  ],
+                  "title" : "On découpe le pain."
+                },
+                {
+                  "foods" : [
+                    {
+                      "name" : "Origan",
+                      "quantity" : 10,
+                      "unit" : "gram"
+                    },
+                    {
+                      "name" : "Herbes de provence",
+                      "quantity" : 10,
+                      "unit" : "gram"
+                    }
+                  ],
+                  "instructions" : [
+                    "Etaler la sauce sur les tranches de pains.",
+                    "Etaler le jambon blanc.",
+                    "Etaler le fromage rapé.",
+                    "Etaler les tranches de champignons.",
+                    "Etaler les tranches d'olives.",
+                    "Disposer les épices pour former le signe du village caché souhaité"
+                  ],
+                  "title" : "On assemble, c'est bientôt fini."
+                },
+                {
+                  "foods" : [
+
+                  ],
+                  "instructions" : [
+                    "Faire chauffer le four à chaleur tournante à 180°C.",
+                    "Une fois le four à la température souhaitée, enfourner le plaque de cuisson.",
+                    "Surveiller attentivement la cuisson pour l'arrêter au moment souhaité (grillé/fondue).",
+                    "Sortir du four et laisser légèrement refroidir avant de déguster."
+                  ],
+                  "title" : "Au four !"
+                }
+              ]
+            }
+            """#
+            try await app.testing().test(
+                .GET,
+                "/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
+                headers: [
+                    "Authorization": "Basic " + ("user:secret".base64String())
+                ],
+                afterResponse: { response async throws in
+
+                    let actualStatus = response.status
+                    let actualResponse = response.body.string
+
+                    // Assert.
+                    #expect(expectedGetStatus == actualStatus)
+                    #expect(expectedGetResponse == actualResponse)
+                }
+            )
         }
+    }
     // swiftlint:enable function_body_length
 
-        @Test("Post on path /recipe with a new small recipe should return 201")
-        func postOnPathKernelRecipeWithNewSimpleRecipeShouldReturn201() async throws {
+    // swiftlint:disable function_body_length
+    @Test("Post on path /recipe with a new small recipe should return 201")
+    func postOnPathKernelRecipeWithNewSimpleRecipeShouldReturn201() async throws {
 
-            try await customWithApp { app in
+        try await customWithApp { app in
 
-                // Arrange.
-                let expectedPostStatus: HTTPResponseStatus = .created
-                let expectedPostResponse = ""
-                let expectedPostResponseHeaderLocation = "/recipe/00000000-0000-0000-0000-000000000000"
-                let json = #"""
-                {
-                  "id" : "00000000-0000-0000-0000-000000000000",
-                  "name" : "Pizza",
-                  "steps" : []
-                }
-                """#
-                let jsonData = Data(json.utf8)
-
-                // Act.
-                try await app.testing().test(
-                    .POST,
-                    "/recipe",
-                    headers: ["Content-Type": "application/json"],
-                    body: .init(data: jsonData),
-                    afterResponse: { response async throws in
-
-                        let actualStatus = response.status
-                        let actualResponse = response.body.string
-                        let actualResponseHeaderLocation = response.headers["Location"].first
-
-                        // Assert.
-                        #expect(expectedPostStatus == actualStatus)
-                        #expect(expectedPostResponse == actualResponse)
-                        #expect(expectedPostResponseHeaderLocation == actualResponseHeaderLocation)
-                    }
-                )
-
-                let expectedGetStatus: HTTPResponseStatus = .ok
-                let expectedGetResponse = #"""
-                {
-                  "id" : "00000000-0000-0000-0000-000000000000",
-                  "name" : "Pizza",
-                  "steps" : [
-
-                  ]
-                }
-                """#
-                try await app.testing().test(
-                    .GET,
-                    "/recipe/00000000-0000-0000-0000-000000000000",
-                    afterResponse: { response async throws in
-
-                        let actualStatus = response.status
-                        let actualResponse = response.body.string
-
-                        // Assert.
-                        #expect(expectedGetStatus == actualStatus)
-                        #expect(expectedGetResponse == actualResponse)
-                    }
-                )
+            // Arrange.
+            let expectedPostStatus: HTTPResponseStatus = .created
+            let expectedPostResponse = ""
+            let expectedPostResponseHeaderLocation = "/recipe/00000000-0000-0000-0000-000000000000"
+            let json = #"""
+            {
+              "id" : "00000000-0000-0000-0000-000000000000",
+              "name" : "Pizza",
+              "steps" : []
             }
+            """#
+            let jsonData = Data(json.utf8)
+
+            // Act.
+            try await app.testing().test(
+                .POST,
+                "/recipe",
+                headers: [
+                    "Authorization": "Basic " + ("admin:adminadmin".base64String()),
+                    "Content-Type": "application/json"
+                ],
+                body: .init(data: jsonData),
+                afterResponse: { response async throws in
+
+                    let actualStatus = response.status
+                    let actualResponse = response.body.string
+                    let actualResponseHeaderLocation = response.headers["Location"].first
+
+                    // Assert.
+                    #expect(expectedPostStatus == actualStatus)
+                    #expect(expectedPostResponse == actualResponse)
+                    #expect(expectedPostResponseHeaderLocation == actualResponseHeaderLocation)
+                }
+            )
+
+            let expectedGetStatus: HTTPResponseStatus = .ok
+            let expectedGetResponse = #"""
+            {
+              "id" : "00000000-0000-0000-0000-000000000000",
+              "name" : "Pizza",
+              "steps" : [
+
+              ]
+            }
+            """#
+            try await app.testing().test(
+                .GET,
+                "/recipe/00000000-0000-0000-0000-000000000000",
+                headers: [
+                    "Authorization": "Basic " + ("user:secret".base64String())
+                ],
+                afterResponse: { response async throws in
+
+                    let actualStatus = response.status
+                    let actualResponse = response.body.string
+
+                    // Assert.
+                    #expect(expectedGetStatus == actualStatus)
+                    #expect(expectedGetResponse == actualResponse)
+                }
+            )
         }
+    }
+    // swiftlint:enable function_body_length
 
     @Test("Delete on path /recipe/{uuid} should return 204 and remove recipe")
     func deleteOnPathKernelRecipeShouldReturn200AndRemoveRecipe() async throws {
@@ -1740,6 +1881,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .DELETE,
                 "/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
+                headers: [
+                    "Authorization": "Basic " + ("admin:adminadmin".base64String())
+                ],
                 afterResponse: { response async throws in
 
                     let actualStatus = response.status
@@ -1752,6 +1896,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .GET,
                 "/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
+                headers: [
+                    "Authorization": "Basic " + ("user:secret".base64String())
+                ],
                 afterResponse: { response async throws in
 
                     let actualStatus = response.status
@@ -1775,6 +1922,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .DELETE,
                 "/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D",
+                headers: [
+                    "Authorization": "Basic " + ("admin:adminadmin".base64String())
+                ],
                 afterResponse: { response async throws in
 
                     let actualStatus = response.status
@@ -1804,6 +1954,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .DELETE,
                 "/recipe/im-not-a-valid-uuid",
+                headers: [
+                    "Authorization": "Basic " + ("admin:adminadmin".base64String())
+                ],
                 afterResponse: { response async throws in
 
                     let actualStatus = response.status
@@ -1829,6 +1982,9 @@ struct FoodHelperRecipeTestsWebserviceUnit {
             try await app.testing().test(
                 .DELETE,
                 "/recipe/00000000-0000-0000-0000-000000000000",
+                headers: [
+                    "Authorization": "Basic " + ("admin:adminadmin".base64String())
+                ],
                 afterResponse: { response async throws in
 
                     let actualStatus = response.status
