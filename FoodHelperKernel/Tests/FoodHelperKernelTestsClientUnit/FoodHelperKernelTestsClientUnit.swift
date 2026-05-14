@@ -26,6 +26,19 @@ struct FoodHelperKernelTestsClientUnit {
         #expect(true)
     }
 
+    @Test("New service with base URL should not explode")
+    func newServiceWithBaseUrlShouldNotExplode() async throws {
+
+        // Arrange.
+        let baseURL = URL(string: "http://localhost:8080")!
+
+        // Act.
+        _ = FoodHelperKernelClient(baseURL: baseURL)
+
+        // Assert.
+        #expect(true)
+    }
+
     @Test("New service with mock should not explode")
     func newServiceWithMockShouldNotExplode() async throws {
 

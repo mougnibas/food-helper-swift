@@ -5,29 +5,21 @@
 ## Everyone is permitted to copy and distribute verbatim copies
 ## of this license document, but changing it is not allowed.
 
+#
+# Application services, both internal and public.
+#
+#  +------------+     +------------+     +------------+
+#  |  database  |     |   kernel   |     |   recipe   |
+#  |            | <-- |            | <-- |            |
+#  | (internal) |     | (internal) |     |  (public)  |
+#  +------------+     +------------+     +------------+
+#
 services:
 
-  kernel :
-    image: food-helper-kernel
-    build:
-      context:    FoodHelperKernel/
-    environment:
-      DB_HOSTNAME: ${DB_HOSTNAME}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_DATABASE: ${DB_DATABASE}
-    ports:
-      - "8080:8080"
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health/live"]
-      start_period: 5s
-      interval: 10s
-      timeout: 2s
-      retries: 5
-    depends_on :
-      database:
-        condition: service_healthy
-
+  # Database service.
+  #
+  # Expose nothing.
+  # Only for data persistence.
   database:
     image: mariadb:12.1-noble
     environment:
@@ -44,5 +36,57 @@ services:
       timeout: 2s
       retries: 5
 
+  # Kernel service.
+  #
+  # Expose nothing.
+  # Core component.
+  # Need a database.
+  kernel:
+    image: food-helper-kernel
+    build:
+      context: FoodHelperKernel/
+    environment:
+      DB_HOSTNAME: ${DB_HOSTNAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health/live"]
+      start_period: 5s
+      interval: 10s
+      timeout: 2s
+      retries: 5
+    depends_on:
+      database:
+        condition: service_healthy
+
+  # Recipe service.
+  #
+  # Expose recipe related service.
+  # Need kernel service.
+  recipe:
+    image: food-helper-recipe
+    build:
+      context: FoodHelperRecipe/
+      additional_contexts:
+        kernel-module: FoodHelperKernel/
+    environment:
+      KERNEL_BASE_URL: http://kernel:8080
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8081/health/live"]
+      start_period: 5s
+      interval: 10s
+      timeout: 2s
+      retries: 5
+    depends_on:
+      kernel:
+        condition: service_healthy
+#
+# Application volumes.
+#
+# Only one, for mariadb.
+#
 volumes:
   mariadb_data:

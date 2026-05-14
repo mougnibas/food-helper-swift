@@ -192,22 +192,21 @@ is used by docker, but in integration, we will try to also run on default port, 
 ##### Test with Swift CLI (unit tests)
 
 ```zsh
-cd FoodHelperKernel/
-swift test --filter Unit
+cd FoodHelperKernel && swift test --filter Unit
+cd FoodHelperRecipe && swift test --filter Unit
 ```
 
 ##### Test with Swift CLI (integration tests)
 
 ```zsh
-cd FoodHelperKernel/
-swift test --filter Integration --no-parallel
+cd FoodHelperKernel && swift test --filter Integration --no-parallel
+cd FoodHelperRecipe && swift test --filter Integration --no-parallel
 ```
 
 ##### Test with Swift CLI (end-to-end tests)
 
 ```zsh
-cd FoodHelperKernel/
-swift test --filter EndToEnd --no-parallel
+cd FoodHelperRecipe && swift test --filter EndToEnd --no-parallel
 ```
 
 #### Test with Xcode

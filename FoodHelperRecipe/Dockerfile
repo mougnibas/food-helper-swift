@@ -21,17 +21,23 @@
 FROM swift:6.2.0-noble AS builder
 
 ##
-## Copy sources.
+## Copy module sources.
 ##
-COPY Package.swift    /app/FoodHelperKernel/Package.swift
-COPY Package.resolved /app/FoodHelperKernel/Package.resolved
-COPY Sources/         /app/FoodHelperKernel/Sources
-COPY Tests/           /app/FoodHelperKernel/Tests
+COPY Package.swift        /app/FoodHelperRecipe/Package.swift
+COPY Package.resolved     /app/FoodHelperRecipe/Package.resolved
+COPY Sources/             /app/FoodHelperRecipe/Sources
+COPY Tests/               /app/FoodHelperRecipe/Tests
+
+##
+## Copy dependencies sources.
+## FoodHelperKernel is provided by compose as a named build context.
+##
+COPY --from=kernel-module / /app/FoodHelperKernel
 
 ##
 ## Conventional path.
 ##
-WORKDIR               /app/FoodHelperKernel
+WORKDIR /app/FoodHelperRecipe
 
 ##
 ## Resolve dependencies.
@@ -48,24 +54,24 @@ RUN swift build --configuration release --disable-sandbox
 ##
 
 ##
-## Slim swift image ro tun the binary.
+## Slim swift image to run the binary.
 ##
 FROM swift:6.2.0-noble-slim
 
 ##
-## Port exposed
+## Port exposed.
 ##
-EXPOSE 8080
+EXPOSE 8081
 
 ##
 ## Conventional path.
 ##
-WORKDIR /app/FoodHelperKernel
+WORKDIR /app/FoodHelperRecipe
 
 ##
 ## Copy the binary.
 ##
-COPY --from=builder /app/FoodHelperKernel/.build/aarch64-unknown-linux-gnu/release/FoodHelperKernelWebservice .
+COPY --from=builder /app/FoodHelperRecipe/.build/release/FoodHelperRecipeWebservice .
 
 ##
 ## Add curl to image, for liveness probing purpose.
@@ -75,12 +81,6 @@ RUN apt-get update              && \
     rm -rf /var/lib/apt/lists/*
 
 ##
-## Run the binary (still need an argument after --env).
+## Run the binary.
 ##
-ENTRYPOINT ["./FoodHelperKernelWebservice", "--env"]
-
-##
-## Default argument is 'production'.
-## User can override it with 'development' or 'testing'.
-##
-CMD ["production"]
+ENTRYPOINT ["./FoodHelperRecipeWebservice"]

@@ -20,7 +20,8 @@ struct FoodHelperRecipeWebserviceFactory {
     static func configure(_ app: Application) async throws {
 
         // Service implementation with kernel client.
-        let kernel = FoodHelperKernelClient()
+        let baseURL = Environment.get("KERNEL_BASE_URL") ?? "localhost"
+        let kernel = FoodHelperKernelClient(baseURL: URL(string: baseURL)!)
         let service = FoodHelperRecipeImpl(kernel)
 
         // Generic configuration.
