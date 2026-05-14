@@ -350,29 +350,29 @@ docker compose down --volumes
 #### Root message
 
 ```zsh
-curl http://127.0.0.1:8080
+curl http://127.0.0.1:8081
 ```
 
 #### Get all recipes
 
 ```zsh
-curl http://127.0.0.1:8080/kernel/recipe
+curl http://127.0.0.1:8081/recipe
 ```
 
 #### Get a recipe
 
 ```zsh
-curl http://127.0.0.1:8080/kernel/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D
+curl http://127.0.0.1:8081/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D
 ```
 
 ```zsh
-curl http://127.0.0.1:8080/kernel/recipe/00000000-0000-0000-0000-000000000000
+curl http://127.0.0.1:8081/recipe/00000000-0000-0000-0000-000000000000
 ```
 
 #### Post a new recipe
 
 ```zsh
-curl http://127.0.0.1:8080/kernel/recipe                   \
+curl http://127.0.0.1:8081/recipe                   \
     --header "Content-Type: application/json"              \
     --data '{
              "id": "00000000-0000-0000-0000-000000000000",
@@ -385,11 +385,11 @@ curl http://127.0.0.1:8080/kernel/recipe                   \
 ##### Live (response 200 OK if server is up)
 
 ```zsh
-curl --verbose http://127.0.0.1:8080/health/live
+curl --verbose http://127.0.0.1:8081/health/live
 ```
 
 ##### Ready (response 200 OK if serveur is up AND ready)
 
 ```zsh
-curl --verbose http://127.0.0.1:8080/health/ready
+curl --verbose http://127.0.0.1:8081/health/ready
 ```

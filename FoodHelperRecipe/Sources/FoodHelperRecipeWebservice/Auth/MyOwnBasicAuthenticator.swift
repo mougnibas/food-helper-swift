@@ -1,0 +1,16 @@
+// GNU AFFERO GENERAL PUBLIC LICENSE
+// Version 3, 19 November 2007
+//
+// Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+// Everyone is permitted to copy and distribute verbatim copies
+// of this license document, but changing it is not allowed.
+
+import Foundation
+
+import Vapor
+
+struct BasicRequestAuthenticator: RequestAuthenticator {
+    func authenticate(request: Request) -> EventLoopFuture<Void> {
+        request.eventLoop.makeSucceededFuture(())
+    }
+}
