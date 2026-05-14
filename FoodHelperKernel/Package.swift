@@ -86,16 +86,6 @@ let package = Package(
                 .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")
             ]
         ),
-        .testTarget(
-            name: "FoodHelperKernelTestsClientEndToEnd",
-            dependencies: [
-                "FoodHelperKernelClient"
-            ],
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")
-            ]
-        ),
-
         // Data access.
         .target(
             name: "FoodHelperKernelDataAccess",
@@ -193,12 +183,6 @@ let package = Package(
                 "FoodHelperKernelWebservice",
                 .product(name: "VaporTesting", package: "vapor")
             ],
-            plugins: [
-                .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")
-            ]
-        ),
-        .testTarget(
-            name: "FoodHelperKernelTestsWebserviceEndToEnd",
             plugins: [
                 .plugin(name: "SwiftLintBuildToolPlugin", package: "SwiftLintPlugins")
             ]

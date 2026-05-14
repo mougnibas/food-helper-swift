@@ -239,6 +239,19 @@ final class FoodHelperKernelTestsClientIntegration {
         #expect(true)
     }
 
+    @Test("Constructor with base URL should not explode")
+    func constructorWithBaseUrlShouldNotExplode() async throws {
+
+        // Arrange.
+        let baseURL = URL(string: "http://localhost:8080")!
+
+        // Act.
+        _ = FoodHelperKernelClient(baseURL: baseURL)
+
+        // Assert.
+        #expect(true)
+    }
+
     // swiftlint:disable function_body_length
     @Test("getAllRecipe should return this first recipes",
           arguments: [Environment.development, Environment.testing, Environment.production])

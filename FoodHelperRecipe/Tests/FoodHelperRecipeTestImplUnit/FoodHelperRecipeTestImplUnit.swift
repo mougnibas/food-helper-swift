@@ -9,30 +9,76 @@ import Foundation
 import Testing
 
 import FoodHelperKernel
-import FoodHelperKernelClient
+import FoodHelperKernelDataAccessInMemory
+import FoodHelperKernelImpl
+import FoodHelperRecipe
+@testable import FoodHelperRecipeImpl
 
-// swiftlint:disable type_body_length
+private actor FailingKernel: FoodHelperKernel {
+
+    private var addCallCount = 0
+    private var getByIdentifierCallCount = 0
+
+    private let kernel: FoodHelperKernelImpl
+
+    init() async throws {
+        self.kernel = try await FoodHelperKernelImpl(dataAccess: FoodHelperKernelDataAccessInMemory())
+    }
+
+    func getAllRecipes() async throws(FoodHelperKernelError) -> [Recipe] {
+        throw .cantAccessData
+    }
+
+    func getRecipeById(id: UUID) async throws(FoodHelperKernelError) -> Recipe? {
+        if getByIdentifierCallCount == 0 {
+            getByIdentifierCallCount = 1
+            return try await kernel.getRecipeById(id: id)
+        }
+
+        throw .cantAccessData
+    }
+
+    func addRecipe(recipe: Recipe) async throws(FoodHelperKernelError) {
+        if addCallCount == 0 {
+            addCallCount = 1
+            try await kernel.addRecipe(recipe: recipe)
+            return
+        }
+
+        throw .cantAccessData
+    }
+
+    func deleteRecipeById(id: UUID) async throws(FoodHelperKernelError) {
+        throw .cantAccessData
+    }
+}
+
 // swiftlint:disable file_length
-@Suite("Client end-to-end Tests", .serialized)
-struct FoodHelperKernelTestsClientEndToEnd {
+// swiftlint:disable type_body_length
+@Suite("FoodHelperRecipeImpl Unit tests")
+struct FoodHelperRecipeTestImplUnit {
 
-    @Test("Default constructor should not explode")
-    func defaultConstructorShouldNotExplode() async throws {
+    @Test("New service should not explode")
+    func newServiceShouldNotExplode() async throws {
 
-        // Arrange and act.
-        _ = FoodHelperKernelClient()
+        // Arrange.
+        let kernel = try await FoodHelperKernelImpl(dataAccess: FoodHelperKernelDataAccessInMemory())
+
+        // Act.
+        _ = FoodHelperRecipeImpl(kernel)
 
         // Assert.
         #expect(true)
     }
 
+    // Swift lint rule disable because recipes are long to describe.
     // swiftlint:disable function_body_length
-    @Test("getAllRecipes should return all recipes")
-    func getAllRecipesShouldReturnAllRecipes() async throws {
+    @Test("Get all recipe should give us this recipe")
+    func getAllRecipesShouldReturnThisRecipe() async throws {
 
         // Arrange.
-        let baseUrl = URL(string: "http://127.0.0.1:8080")!
-        let service = FoodHelperKernelClient(baseURL: baseUrl, loader: URLSession.shared)
+        let kernel = try await FoodHelperKernelImpl(dataAccess: FoodHelperKernelDataAccessInMemory())
+        let service = FoodHelperRecipeImpl(kernel)
         let expected = Recipe(
             id: UUID(uuidString: "B68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!,
             name: "Tartine façon Zoé (Thème Naruto)",
@@ -138,22 +184,23 @@ struct FoodHelperKernelTestsClientEndToEnd {
         )
 
         // Act.
-        let recipes = try await service.getAllRecipes()
-        let actual = recipes[0]
+        let recipes = try await service.getAll()
+        let actual: Recipe = recipes[0]
 
-        // Assert.
+        // Assert
         #expect(recipes.count == 1)
         #expect(expected == actual)
     }
     // swiftlint:enable function_body_length
 
+    // Swift lint rule disable because recipes are long to describe.
     // swiftlint:disable function_body_length
     @Test("Get recipe by this ID should return this recipe")
     func getRecipeByIdShouldReturnThisRecipe() async throws {
 
         // Arrange.
-        let baseUrl = URL(string: "http://127.0.0.1:8080")!
-        let service = FoodHelperKernelClient(baseURL: baseUrl, loader: URLSession.shared)
+        let kernel = try await FoodHelperKernelImpl(dataAccess: FoodHelperKernelDataAccessInMemory())
+        let service = FoodHelperRecipeImpl(kernel)
         let expected = Recipe(
             id: UUID(uuidString: "B68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!,
             name: "Tartine façon Zoé (Thème Naruto)",
@@ -259,25 +306,40 @@ struct FoodHelperKernelTestsClientEndToEnd {
         )
 
         // Act.
-        let actual = try await service.getRecipeById(id: expected.id)
+        let actual = try await service.getById(id: expected.id)
 
         // Assert.
         #expect(expected == actual)
     }
     // swiftlint:enable function_body_length
 
+    @Test("getRecipeById two time should throw cantAccessData")
+    func getRecipeByIdTwoTimeShouldThrowCantAccessData() async throws {
+
+        // Arrange.
+        let kernel = try await FailingKernel()
+        let service = FoodHelperRecipeImpl(kernel)
+        let id = UUID(uuidString: "B68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!
+        _ = try await service.getById(id: id)
+
+        // Act and assert.
+        await #expect(throws: FoodHelperRecipeError.cantAccessData) {
+            _ = try await service.getById(id: id)
+        }
+    }
+
     @Test("Get recipe with unknown ID should return nil")
     func getRecipeWithUnknownIdShouldReturnNil() async throws {
 
         // Arrange.
-        let baseUrl = URL(string: "http://127.0.0.1:8080")!
-        let service = FoodHelperKernelClient(baseURL: baseUrl, loader: URLSession.shared)
+        let kernel = try await FoodHelperKernelImpl(dataAccess: FoodHelperKernelDataAccessInMemory())
+        let service = FoodHelperRecipeImpl(kernel)
         let unknownId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
 
         // Act.
-        let actual = try? await service.getRecipeById(id: unknownId)
+        let actual = try? await service.getById(id: unknownId)
 
-        // Assert.
+        // Act.
         #expect(actual == nil)
     }
 
@@ -285,179 +347,105 @@ struct FoodHelperKernelTestsClientEndToEnd {
     func addANewRecipeAndGetItShouldBeTheSame() async throws {
 
         // Arrange.
-        let baseUrl = URL(string: "http://127.0.0.1:8080")!
-        let service = FoodHelperKernelClient(baseURL: baseUrl, loader: URLSession.shared)
-        let id = UUID()
+        let kernel = try await FoodHelperKernelImpl(dataAccess: FoodHelperKernelDataAccessInMemory())
+        let service = FoodHelperRecipeImpl(kernel)
+        let id = UUID(uuidString: "A68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!
         let name = "Raclette"
         let expected = Recipe(id: id, name: name)
 
         // Act.
-        try await service.addRecipe(recipe: expected)
-        let actual = try await service.getRecipeById(id: id)
+        _ = try await service.add(recipe: expected)
+        let actual = try await service.getById(id: id)
 
         // Assert.
         #expect(expected == actual)
-
-        // Cleanup.
-        try await service.deleteRecipeById(id: id)
     }
 
     @Test("Delete recipe by id should remove the recipe")
     func deleteRecipeByIdShouldRemoveRecipe() async throws {
 
         // Arrange.
-        let baseUrl = URL(string: "http://127.0.0.1:8080")!
-        let service = FoodHelperKernelClient(baseURL: baseUrl, loader: URLSession.shared)
-        let id = UUID()
-        let recipe = Recipe(id: id, name: "Raclette")
-        try await service.addRecipe(recipe: recipe)
+        let kernel = try await FoodHelperKernelImpl(dataAccess: FoodHelperKernelDataAccessInMemory())
+        let service = FoodHelperRecipeImpl(kernel)
+        let id = UUID(uuidString: "B68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!
 
         // Act.
-        try await service.deleteRecipeById(id: id)
-        let actual = try? await service.getRecipeById(id: id)
+        try await service.deleteById(id: id)
+        let actual = try? await service.getById(id: id)
 
         // Assert.
         #expect(actual == nil)
     }
 
-    @Test("Get welcome message should return expected string")
-    func getWelcomeMessageShouldReturnExpectedString() async throws {
+    @Test("Delete recipe with unknown ID should not throw")
+    func deleteRecipeWithUnknownIdShouldNotThrow() async throws {
 
         // Arrange.
-        let baseUrl = URL(string: "http://127.0.0.1:8080")!
-        let service = FoodHelperKernelClient(baseURL: baseUrl, loader: URLSession.shared)
-        let expected = "Welcome to FoodHelperKernelWebservice!"
+        let kernel = try await FoodHelperKernelImpl(dataAccess: FoodHelperKernelDataAccessInMemory())
+        let service = FoodHelperRecipeImpl(kernel)
+        let unknownId = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
 
         // Act.
-        let actual = try await service.getWelcomeMessage()
+        try await service.deleteById(id: unknownId)
 
         // Assert.
-        #expect(expected == actual)
+        #expect(true)
     }
 
-    @Test("Get health live should return ok")
-    func getHealthLiveShouldReturnOK() async throws {
+    @Test("Get all recipes should throw cantAccessData when data access fails")
+    func getAllRecipesShouldThrowCantAccessDataWhenDataAccessFails() async throws {
 
         // Arrange.
-        let baseUrl = URL(string: "http://127.0.0.1:8080")!
-        let service = FoodHelperKernelClient(baseURL: baseUrl, loader: URLSession.shared)
-        let expected = true
-
-        // Act.
-        let actual = try await service.getHealthLive()
-
-        // Assert.
-        #expect(actual == expected)
-    }
-
-    @Test("Get health ready should return ok")
-    func getHealthReadyShouldReturnOK() async throws {
-
-        // Arrange.
-        let baseUrl = URL(string: "http://127.0.0.1:8080")!
-        let service = FoodHelperKernelClient(baseURL: baseUrl, loader: URLSession.shared)
-        let expected = true
-
-        // Act.
-        let actual = try await service.getHealthReady()
-
-        // Assert.
-        #expect(expected == actual)
-    }
-
-    @Test("Get health ready with invalid URL should return false")
-    func getHealthReadyWithInvalidUrlShouldReturnFalse() async throws {
-
-        // Arrange.
-        let invalidBaseUrl = URL(string: "http://127.0.0.1:1")!
-        let service = FoodHelperKernelClient(baseURL: invalidBaseUrl, loader: URLSession.shared)
-        let expected = false
-
-        // Act.
-        let actual = try await service.getHealthReady()
-
-        // Assert.
-        #expect(expected == actual)
-    }
-
-    @Test("Get all recipes should throw cantAccessData with invalid base URL")
-    func getAllRecipesShouldThrowCantAccessDataWithInvalidBaseURL() async throws {
-
-        // Arrange.
-        let invalidBaseUrl = URL(string: "http://127.0.0.1:1")!
-        let service = FoodHelperKernelClient(baseURL: invalidBaseUrl, loader: URLSession.shared)
+        let kernel = try await FailingKernel()
+        let service = FoodHelperRecipeImpl(kernel)
 
         // Act and assert.
-        await #expect(throws: FoodHelperKernelError.cantAccessData) {
-            _ = try await service.getAllRecipes()
+        await #expect(throws: FoodHelperRecipeError.cantAccessData) {
+            try await service.getAll()
         }
     }
 
-    @Test("Get recipe by id should throw cantAccessData with invalid base URL")
-    func getRecipeByIdShouldThrowCantAccessDataWithInvalidBaseURL() async throws {
+    @Test("Get recipe by id should throw cantAccessData when data access fails")
+    func getRecipeByIdShouldThrowCantAccessDataWhenDataAccessFails() async throws {
 
         // Arrange.
-        let invalidBaseUrl = URL(string: "http://127.0.0.1:1")!
-        let service = FoodHelperKernelClient(baseURL: invalidBaseUrl, loader: URLSession.shared)
-        let id = UUID()
+        let kernel = try await FailingKernel()
+        let service = FoodHelperRecipeImpl(kernel)
+        let id = UUID(uuidString: "A68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!
+        _ = try await service.getById(id: id)
 
         // Act and assert.
-        await #expect(throws: FoodHelperKernelError.cantAccessData) {
-            _ = try await service.getRecipeById(id: id)
+        await #expect(throws: FoodHelperRecipeError.cantAccessData) {
+            _ = try await service.getById(id: id)
         }
     }
 
-    @Test("Add recipe should throw cantAccessData with invalid base URL")
-    func addRecipeShouldThrowCantAccessDataWithInvalidBaseURL() async throws {
+    @Test("Add recipe should throw cantAccessData when data access fails")
+    func addRecipeShouldThrowCantAccessDataWhenDataAccessFails() async throws {
 
         // Arrange.
-        let invalidBaseUrl = URL(string: "http://127.0.0.1:1")!
-        let service = FoodHelperKernelClient(baseURL: invalidBaseUrl, loader: URLSession.shared)
-        let recipe = Recipe(id: UUID(), name: "Test", steps: [])
+        let kernel = try await FailingKernel()
+        let service = FoodHelperRecipeImpl(kernel)
+        let recipe = Recipe(id: UUID(uuidString: "A68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!, name: "Raclette")
+        try await service.add(recipe: recipe)
 
         // Act and assert.
-        await #expect(throws: FoodHelperKernelError.cantAccessData) {
-            try await service.addRecipe(recipe: recipe)
+        await #expect(throws: FoodHelperRecipeError.cantAccessData) {
+            try await service.add(recipe: recipe)
         }
     }
 
-    @Test("Delete recipe should throw cantAccessData with invalid base URL")
-    func deleteRecipeShouldThrowCantAccessDataWithInvalidBaseURL() async throws {
+    @Test("Delete recipe should throw cantAccessData when data access fails")
+    func deleteRecipeShouldThrowCantAccessDataWhenDataAccessFails() async throws {
 
         // Arrange.
-        let invalidBaseUrl = URL(string: "http://127.0.0.1:1")!
-        let service = FoodHelperKernelClient(baseURL: invalidBaseUrl, loader: URLSession.shared)
-        let id = UUID()
+        let kernel = try await FailingKernel()
+        let service = FoodHelperRecipeImpl(kernel)
+        let id = UUID(uuidString: "B68A66C6-670B-4D48-8B25-8F9A61FD8E9D")!
 
         // Act and assert.
-        await #expect(throws: FoodHelperKernelError.cantAccessData) {
-            try await service.deleteRecipeById(id: id)
-        }
-    }
-
-    @Test("Get welcome message should throw cantAccessData with invalid base URL")
-    func getWelcomeMessageShouldThrowCantAccessDataWithInvalidBaseURL() async throws {
-
-        // Arrange.
-        let invalidBaseUrl = URL(string: "http://127.0.0.1:1")!
-        let service = FoodHelperKernelClient(baseURL: invalidBaseUrl, loader: URLSession.shared)
-
-        // Act and assert.
-        await #expect(throws: FoodHelperKernelError.cantAccessData) {
-            _ = try await service.getWelcomeMessage()
-        }
-    }
-
-    @Test("Get health live should throw cantAccessData with invalid base URL")
-    func getHealthLiveShouldThrowCantAccessDataWithInvalidBaseURL() async throws {
-
-        // Arrange.
-        let invalidBaseUrl = URL(string: "http://127.0.0.1:1")!
-        let service = FoodHelperKernelClient(baseURL: invalidBaseUrl, loader: URLSession.shared)
-
-        // Act and assert.
-        await #expect(throws: FoodHelperKernelError.cantAccessData) {
-            _ = try await service.getHealthLive()
+        await #expect(throws: FoodHelperRecipeError.cantAccessData) {
+            try await service.deleteById(id: id)
         }
     }
 }

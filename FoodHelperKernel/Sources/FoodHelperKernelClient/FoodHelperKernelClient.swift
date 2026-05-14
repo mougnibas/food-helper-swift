@@ -23,9 +23,14 @@ public actor FoodHelperKernelClient: FoodHelperKernel {
         self.loader = URLSession.shared
     }
 
-    public init(baseURL: URL, loader: DataLoading) {
-        self.loader = loader
+    public init(baseURL: URL) {
         self.baseURL = baseURL
+        self.loader = URLSession.shared
+    }
+
+    public init(baseURL: URL, loader: DataLoading) {
+        self.baseURL = baseURL
+        self.loader = loader
     }
 
     public func getAllRecipes() async throws(FoodHelperKernelError) -> [Recipe] {

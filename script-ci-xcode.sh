@@ -99,6 +99,24 @@ tests_unit() {
         exit 1
     fi
 
+    echo "Running Unit tests: FoodHelperRecipeTestImplUnit: ..."
+    if xcodebuild -scheme FoodHelperRecipeTestImplUnit test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
+        echo "Running Unit tests: FoodHelperRecipeTestImplUnit: SUCCESS"
+        open_latest_xcresult
+    else
+        echo "Running Unit tests: FoodHelperRecipeTestImplUnit: FAILURE (see $LOG_FILE)" >&2
+        exit 1
+    fi
+
+    echo "Running Unit tests: FoodHelperRecipeTestsWebserviceUnit: ..."
+    if xcodebuild -scheme FoodHelperRecipeTestsWebserviceUnit test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
+        echo "Running Unit tests: FoodHelperRecipeTestsWebserviceUnit: SUCCESS"
+        open_latest_xcresult
+    else
+        echo "Running Unit tests: FoodHelperRecipeTestsWebserviceUnit: FAILURE (see $LOG_FILE)" >&2
+        exit 1
+    fi
+
     echo "Running Unit tests: SUCCESS"
     echo
 }
@@ -154,6 +172,16 @@ tests_integration() {
         stop_mariadb_on_failure
         exit 1
     fi
+
+    echo "Running Integration tests: FoodHelperRecipeTestsWebserviceIntegration: ..."
+    if xcodebuild -scheme FoodHelperRecipeTestsWebserviceIntegration test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
+        echo "Running Integration tests: FoodHelperRecipeTestsWebserviceIntegration: SUCCESS"
+        open_latest_xcresult
+    else
+        echo "Running Integration tests: FoodHelperRecipeTestsWebserviceIntegration: FAILURE (see $LOG_FILE)" >&2
+        stop_mariadb_on_failure
+        exit 1
+    fi
     echo "Running Integration tests: SUCCESS"
 
     echo "Stopping environment for integration tests: ..."
@@ -180,22 +208,12 @@ tests_end_to_end() {
     fi
 
     echo "Running End-to-end tests: ..."
-    echo "Running End-to-end tests: FoodHelperKernelTestsWebserviceEndToEnd: ..."
-    if xcodebuild -scheme FoodHelperKernelTestsWebserviceEndToEnd test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
-        echo "Running End-to-end tests: FoodHelperKernelTestsWebserviceEndToEnd: SUCCESS"
+    echo "Running End-to-end tests: FoodHelperRecipeTestsWebserviceEndToEnd: ..."
+    if xcodebuild -scheme FoodHelperRecipeTestsWebserviceEndToEnd test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
+        echo "Running End-to-end tests: FoodHelperRecipeTestsWebserviceEndToEnd: SUCCESS"
         open_latest_xcresult
     else
-        echo "Running End-to-end tests: FoodHelperKernelTestsWebserviceEndToEnd: FAILURE (see $LOG_FILE)" >&2
-        stop_compose_on_failure
-        exit 1
-    fi
-
-    echo "Running End-to-end tests: FoodHelperKernelTestsClientEndToEnd: ..."
-    if xcodebuild -scheme FoodHelperKernelTestsClientEndToEnd test -enableCodeCoverage YES >> "$LOG_FILE" 2>&1; then
-        echo "Running End-to-end tests: FoodHelperKernelTestsClientEndToEnd: SUCCESS"
-        open_latest_xcresult
-    else
-        echo "Running End-to-end tests: FoodHelperKernelTestsClientEndToEnd: FAILURE (see $LOG_FILE)" >&2
+        echo "Running End-to-end tests: FoodHelperRecipeTestsWebserviceEndToEnd: FAILURE (see $LOG_FILE)" >&2
         stop_compose_on_failure
         exit 1
     fi

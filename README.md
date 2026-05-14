@@ -192,22 +192,21 @@ is used by docker, but in integration, we will try to also run on default port, 
 ##### Test with Swift CLI (unit tests)
 
 ```zsh
-cd FoodHelperKernel/
-swift test --filter Unit
+cd FoodHelperKernel && swift test --filter Unit
+cd FoodHelperRecipe && swift test --filter Unit
 ```
 
 ##### Test with Swift CLI (integration tests)
 
 ```zsh
-cd FoodHelperKernel/
-swift test --filter Integration --no-parallel
+cd FoodHelperKernel && swift test --filter Integration --no-parallel
+cd FoodHelperRecipe && swift test --filter Integration --no-parallel
 ```
 
 ##### Test with Swift CLI (end-to-end tests)
 
 ```zsh
-cd FoodHelperKernel/
-swift test --filter EndToEnd --no-parallel
+cd FoodHelperRecipe && swift test --filter EndToEnd --no-parallel
 ```
 
 #### Test with Xcode
@@ -351,46 +350,68 @@ docker compose down --volumes
 #### Root message
 
 ```zsh
-curl http://127.0.0.1:8080
+curl http://127.0.0.1:8081
 ```
 
-#### Get all recipes
+#### Get all recipes (user/secret)
 
 ```zsh
-curl http://127.0.0.1:8080/kernel/recipe
+curl                                               \
+  --request "GET"                                  \
+  --header "Authorization: Basic dXNlcjpzZWNyZXQ=" \
+  http://127.0.0.1:8081/recipe
 ```
 
-#### Get a recipe
+#### Get a recipe (user/secret)
 
 ```zsh
-curl http://127.0.0.1:8080/kernel/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D
+curl                                               \
+  --request "GET"                                  \
+  --header "Authorization: Basic dXNlcjpzZWNyZXQ=" \
+  http://127.0.0.1:8081/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D
 ```
 
 ```zsh
-curl http://127.0.0.1:8080/kernel/recipe/00000000-0000-0000-0000-000000000000
+curl                                               \
+  --request "GET"                                  \
+  --header "Authorization: Basic dXNlcjpzZWNyZXQ=" \
+  http://127.0.0.1:8081/recipe/00000000-0000-0000-0000-000000000000
 ```
 
-#### Post a new recipe
+#### Post a new recipe (admin/adminadmin)
 
 ```zsh
-curl http://127.0.0.1:8080/kernel/recipe                   \
-    --header "Content-Type: application/json"              \
-    --data '{
-             "id": "00000000-0000-0000-0000-000000000000",
-             "name": "Pizza",
-             "steps": []
-            }'
+curl                                                       \
+  --request "POST"                                         \
+  --header "Authorization: Basic YWRtaW46YWRtaW5hZG1pbg==" \
+  --header "Content-Type: application/json"                \
+  --data '{
+           "id": "00000000-0000-0000-0000-000000000000",
+           "name": "Pizza",
+           "steps": []
+          }'                                              \
+  http://127.0.0.1:8081/recipe
 ```
+
+#### Delete a recipe (admin/adminadmin)
+
+```zsh
+curl                                                       \
+  --request "DELETE"                                       \
+  --header "Authorization: Basic YWRtaW46YWRtaW5hZG1pbg==" \
+  http://127.0.0.1:8081/recipe/B68A66C6-670B-4D48-8B25-8F9A61FD8E9D
+```
+
 #### Health checks
 
 ##### Live (response 200 OK if server is up)
 
 ```zsh
-curl --verbose http://127.0.0.1:8080/health/live
+curl --verbose http://127.0.0.1:8081/health/live
 ```
 
 ##### Ready (response 200 OK if serveur is up AND ready)
 
 ```zsh
-curl --verbose http://127.0.0.1:8080/health/ready
+curl --verbose http://127.0.0.1:8081/health/ready
 ```
